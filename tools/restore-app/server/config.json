@@ -1,0 +1,9 @@
+{
+  "port": 5181,
+  "backups": {
+    "directory": ""
+  },
+  "cors": {
+    "allowedOrigins": ["http://localhost:5180", "http://127.0.0.1:5180", "http://192.16.1.14:5180"]
+  }
+}

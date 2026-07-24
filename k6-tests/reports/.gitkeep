@@ -1,0 +1,14 @@
+# Reports Directory
+
+Este directorio almacena los reportes generados por k6 cuando se usa la opción `--json`.
+
+Los archivos `.json`, `.html` y `.xml` están ignorados en `.gitignore`.
+
+## Ejemplo de uso:
+
+```bash
+# Generar reporte JSON
+./k6-tests/run-test.sh load --json
+
+# Esto crea: reports/load-TIMESTAMP.json
+```

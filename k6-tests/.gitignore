@@ -1,0 +1,25 @@
+# k6 Test Reports
+reports/*.json
+reports/*.html
+reports/*.xml
+
+# Node modules (si se agregan dependencias)
+node_modules/
+
+# Logs
+*.log
+
+# Environment variables (si se usan)
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alumno_apoderado {
+  id            BigInt     @id @default(autoincrement())
+  alumno_id     BigInt
+  apoderado_id  BigInt
+  tipo_relacion String     @db.VarChar(20)
+  parentesco    String?
+  orden         Int?
+  alumnos       alumnos    @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  apoderados    apoderados @relation(fields: [apoderado_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([alumno_id, apoderado_id])
+  @@index([alumno_id], map: "idx_alumno_apoderado_alumno_id")
+  @@index([apoderado_id], map: "idx_alumno_apoderado_apoderado_id")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alumno_nee {
+  id            Int       @id @default(autoincrement())
+  alumno_id     BigInt
+  nee_id        Int
+  observaciones String?
+  alumnos       alumnos   @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tipos_nee     tipos_nee @relation(fields: [nee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([alumno_id, nee_id])
+  @@index([alumno_id], map: "idx_alumno_nee_alumno_id")
+  @@index([nee_id], map: "idx_alumno_nee_nee_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model alumnos {
+  id                         BigInt                  @id @default(autoincrement())
+  rut                        Int
+  dv                         String
+  nombres                    String
+  nombre_social              String?
+  apellido_paterno           String
+  apellido_materno           String
+  fecha_nacimiento           DateTime                @db.Date
+  genero                     String
+  nacionalidad               String
+  etnia                      String?
+  religion                   Boolean?                @default(false)
+  tipo_religion              String?
+  direccion                  String
+  complemento_direccion      String?
+  region                     String
+  comuna                     String
+  telefono                   String?
+  telefono_fijo              String?
+  con_quien_vive             String
+  prevision_salud_id         Int?
+  anio_matricula             Int
+  curso_id                   Int?
+  curso_base                 String
+  letra                      String
+  estado                     String                  @default("matriculado")
+  fecha_retiro               DateTime?               @db.Date
+  observacion_retiro         String?
+  pie                        Boolean?                @default(false)
+  pae                        Boolean?                @default(false)
+  beca                       Boolean?                @default(false)
+  tipo_beca                  String?
+  es_prioritario             Boolean?                @default(false)
+  creado_por                 BigInt?
+  fecha_creacion             DateTime?               @default(now()) @db.Timestamptz(6)
+  modificado_por             BigInt?
+  fecha_modificacion         DateTime?               @default(now()) @db.Timestamptz(6)
+  eliminado                  Boolean?                @default(false)
+  motivo_eliminacion         String?
+  observaciones              String?
+  observaciones_matriculador String?
+  nombre_completo_busqueda   String?
+  alumno_apoderado           alumno_apoderado[]
+  alumno_nee                 alumno_nee[]
+  cursos                     cursos?                 @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  previsiones_salud          previsiones_salud?      @relation(fields: [prevision_salud_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documentos_pendientes      documentos_pendientes[]
+
+  @@unique([rut, anio_matricula])
+  @@index([anio_matricula], map: "idx_alumnos_anio_matricula")
+  @@index([curso_id], map: "idx_alumnos_curso_id")
+  @@index([estado], map: "idx_alumnos_estado")
+  @@index([prevision_salud_id], map: "idx_alumnos_prevision_salud")
+  @@index([rut], map: "idx_alumnos_rut")
+}
+
+model anio_vigente {
+  id         BigInt    @id @default(autoincrement())
+  anio       Int       @unique
+  activo     Boolean   @default(false)
+  creado_por String
+  creado_en  DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model apoderados {
+  id                    BigInt             @id @default(autoincrement())
+  tipo_documento        String
+  rut                   Int?
+  dv                    String?
+  dni                   String?
+  pasaporte             String?
+  nombre                String
+  apellido_paterno      String
+  apellido_materno      String
+  parentesco            String?
+  genero                String
+  fecha_nacimiento      DateTime           @db.Date
+  nacionalidad          String
+  direccion             String
+  complemento_direccion String?
+  region                String?
+  comuna                String?
+  celular               String
+  email                 String?
+  creado_en             DateTime?          @default(now()) @db.Timestamptz(6)
+  actualizado_en        DateTime?          @default(now()) @db.Timestamptz(6)
+  nivel_educacional     String?
+  situacion_laboral     String?
+  lugar_trabajo         String?
+  alumno_apoderado      alumno_apoderado[]
+
+  @@index([rut], map: "idx_apoderados_rut")
+  @@index([tipo_documento], map: "idx_apoderados_tipo_documento")
+}
+
+model backups {
+  id             BigInt    @id @default(autoincrement())
+  nombre_archivo String
+  ruta           String
+  tipo           String
+  anio           Int
+  tamano         BigInt
+  registros      Int
+  creado_por     String
+  creado_en      DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model cursos {
+  id                 Int                @id @default(autoincrement())
+  nivel_educativo_id Int
+  grado_id           Int
+  letra_id           Int
+  jornada_id         Int
+  anio_academico     Int
+  codigo             String
+  capacidad_maxima   Int                @default(40)
+  sala               String?
+  profesor_jefe_id   BigInt?
+  estado             String             @default("planificado")
+  creado_por         String
+  creado_en          DateTime?          @default(now()) @db.Timestamptz(6)
+  actualizado_por    String?
+  actualizado_en     DateTime?          @default(now()) @db.Timestamptz(6)
+  alumnos            alumnos[]
+  grados             grados             @relation(fields: [grado_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  jornadas           jornadas           @relation(fields: [jornada_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  letras_curso       letras_curso       @relation(fields: [letra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  niveles_educativos niveles_educativos @relation(fields: [nivel_educativo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios           usuarios?          @relation(fields: [profesor_jefe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profesor_curso     profesor_curso[]
+
+  @@unique([grado_id, letra_id, anio_academico])
+  @@index([anio_academico], map: "idx_cursos_anio_academico")
+  @@index([codigo], map: "idx_cursos_codigo")
+  @@index([estado], map: "idx_cursos_estado")
+  @@index([nivel_educativo_id], map: "idx_cursos_nivel_educativo")
+  @@index([profesor_jefe_id], map: "idx_cursos_profesor_jefe")
+}
+
+model cursos_asignados {
+  id         BigInt   @id @default(autoincrement())
+  usuario_id BigInt
+  curso_base String
+  letra      String
+  usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model documentos_pendientes {
+  id                     BigInt    @id @default(autoincrement())
+  alumno_id              BigInt
+  certificado_nacimiento Boolean?  @default(false)
+  ficha_salud            Boolean?  @default(false)
+  autorizacion_imagen    Boolean?  @default(false)
+  otros                  String?
+  entregado_en           DateTime? @db.Timestamptz(6)
+  alumnos                alumnos   @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model grados {
+  id                 Int                @id @default(autoincrement())
+  nivel_educativo_id Int
+  codigo             String             @unique
+  nombre_corto       String?
+  nombre_completo    String
+  orden              Int
+  edad_ideal         Int?
+  activo             Boolean?           @default(true)
+  cursos             cursos[]
+  niveles_educativos niveles_educativos @relation(fields: [nivel_educativo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([nivel_educativo_id], map: "idx_grados_nivel")
+}
+
+model jornadas {
+  id              Int       @id @default(autoincrement())
+  codigo          String    @unique
+  nombre          String
+  descripcion     String?
+  horario_inicio  DateTime? @db.Time(6)
+  horario_termino DateTime? @db.Time(6)
+  activo          Boolean?  @default(true)
+  cursos          cursos[]
+}
+
+model letras_curso {
+  id          Int      @id @default(autoincrement())
+  letra       String   @unique
+  orden       Int
+  descripcion String?
+  activo      Boolean? @default(true)
+  cursos      cursos[]
+}
+
+model logs_importacion {
+  id             BigInt    @id @default(autoincrement())
+  archivo_nombre String
+  filas_totales  Int
+  filas_exitosas Int
+  filas_erroneas Int
+  errores        String?
+  estado         String
+  importado_por  String
+  importado_en   DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model niveles_educativos {
+  id             Int       @id @default(autoincrement())
+  codigo_sige    Int       @unique
+  nombre         String
+  descripcion    String?
+  orden          Int
+  activo         Boolean?  @default(true)
+  creado_en      DateTime? @default(now()) @db.Timestamptz(6)
+  actualizado_en DateTime? @default(now()) @db.Timestamptz(6)
+  cursos         cursos[]
+  grados         grados[]
+}
+
+model previsiones_salud {
+  id             Int       @id @default(autoincrement())
+  codigo         String    @unique
+  nombre         String
+  descripcion    String?
+  orden          Int
+  activo         Boolean?  @default(true)
+  creado_en      DateTime? @default(now()) @db.Timestamptz(6)
+  actualizado_en DateTime? @default(now()) @db.Timestamptz(6)
+  alumnos        alumnos[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model profesor_curso {
+  id               Int       @id @default(autoincrement())
+  curso_id         Int
+  usuario_id       BigInt
+  tipo_asignacion  String
+  asignatura       String?
+  puede_matricular Boolean?  @default(false)
+  puede_editar     Boolean?  @default(false)
+  asignado_por     String?
+  asignado_en      DateTime? @default(now()) @db.Timestamptz(6)
+  actualizado_en   DateTime? @default(now()) @db.Timestamptz(6)
+  observaciones    String?
+  cursos           cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios         usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([curso_id, usuario_id, tipo_asignacion, asignatura])
+  @@index([curso_id], map: "idx_profesor_curso_curso_id")
+  @@index([usuario_id], map: "idx_profesor_curso_usuario_id")
+}
+
+model tipos_nee {
+  id          Int          @id @default(autoincrement())
+  codigo      String       @unique
+  descripcion String
+  categoria   String?
+  alumno_nee  alumno_nee[]
+
+  @@index([codigo], map: "idx_tipos_nee_codigo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model usuarios {
+  id               BigInt             @id
+  username         String             @unique
+  password_hash    String
+  nombre           String
+  rol              String
+  estado           String             @default("activo")
+  creado_en        DateTime?          @default(now()) @db.Timestamptz(6)
+  cursos           cursos[]
+  cursos_asignados cursos_asignados[]
+  profesor_curso   profesor_curso[]
+
+  @@index([rol], map: "idx_usuarios_rol")
+  @@index([username], map: "idx_usuarios_username")
+}

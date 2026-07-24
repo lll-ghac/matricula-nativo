@@ -1,0 +1,34 @@
+{
+  "name": "matricula-escolar",
+  "version": "1.6.0",
+  "description": "Sistema de Gestión de Matrícula Escolar",
+  "scripts": {
+    "test:matricula": "node test-matricula-flow.js"
+  },
+  "keywords": [
+    "matricula",
+    "escolar"
+  ],
+  "author": "",
+  "license": "ISC",
+  "mcpServers": {
+    "TestSprite": {
+      "command": "npx",
+      "args": [
+        "@testsprite/testsprite-mcp@latest"
+      ],
+      "env": {
+        "API_KEY": "your-api-key"
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^1.13.1",
+    "fetch-cookie": "^3.1.0",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.16.3",
+    "sqlite3": "^5.1.7",
+    "tough-cookie": "^6.0.0",
+    "xlsx": "^0.18.5"
+  }
+}

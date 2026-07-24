@@ -1,0 +1,329 @@
+# ================================
+# Sistema de Matrícula Escolar v1.0
+# .gitignore
+# ================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# Snowpack dependency directory
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public/
+!frontend/public/
+!frontend/public/**
+
+# Vite build output
+dist/
+dist-ssr/
+*.local
+
+# Rollup.js default build output
+dist/
+
+# Storybook build outputs
+.out
+.storybook-out
+storybook-static
+
+# Temporary folders
+tmp/
+temp/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database files
+*.db
+*.db.*
+*.sqlite
+*.sqlite3
+database.db
+matricula.db
+
+# Backup files
+*.backup
+*.bak
+backup/
+backups/
+
+# Copias de seguridad puntuales de la migración (redundantes con git, no versionar)
+backend-backup-pre-migracion/
+frontend-backup-pre-migracion/
+
+# Python virtual environment (si hay scripts Python)
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración sensibles
+config/production.json
+config/secrets.json
+secrets.json
+
+# Archivos de deployment
+deploy.sh
+deploy.bat
+
+# Certificados y llaves
+*.pem
+*.key
+*.crt
+*.csr
+
+# Documentos y exports temporales
+exports/
+temp_exports/
+*.xlsx
+*.pdf
+uploads/
+
+# Build artifacts
+build/
+dist/
+
+# Archivos específicos del proyecto
+CLAUDE.md
+server_original_backup.js
+server_secure.js
+
+# Archivos de testing locales
+test_local/
+testing/
+
+# Archivos de desarrollo local
+dev_notes.txt
+TODO.md
+NOTAS.md
+
+# Documentación de desarrollo y notas internas
+BD_CONFIGURACION.md
+COMPROBANTE_TEST.md
+ESTRUCTURA_APODERADOS.md
+FLUJO_MATRICULA.md
+MEJORAS_UX.md
+PROBLEMA_APODERADOS_BORRADOS.md
+VALIDACIONES_TELEFONO.md
+gemini.md
+
+# Scripts Python de importación (ya no necesarios)
+*.py
+importar_*.py
+
+# Datos sensibles y de prueba
+datos_matricula.csv
+test_usuarios.csv
+*.csv
+
+# Configuraciones locales de IDE
+.vscode/settings.json
+.idea/workspace.xml
+
+# Archivos temporales de Office
+~$*.doc*
+~$*.xls*
+~$*.ppt*
+
+# Archivos de sistema Windows
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+nul
+**/nul
+
+# Archivos temporales y erróneos
+*srcApp.tsx
+
+# SQLite temporary files (WAL mode)
+*.db-shm
+*.db-wal
+
+# ================================
+# Archivos de testing y desarrollo
+# ================================
+
+# Scripts de testing
+test-*.js
+check-*.js
+verify-*.js
+debug-*.js
+analizar-*.js
+apply-*.js
+fix-*.js
+migrate-*.js
+assign-*.js
+create-*.js
+list-*.js
+restore-*.js
+delete-*.js
+generate-*.js
+limpiar-*.js
+run-migration-*.js
+sync-*.js
+
+# Archivos temporales
+cat
+sleep
+3
+
+# Carpetas de desarrollo
+backend/routes/students.REFACTORED/
+backend/routes/*.BACKUP.js
+backend/routes/*.OLD.js
+backend/services/
+backend/utils/students/
+chrome-devtools-mcp/
+
+# Screenshots y media
+screenshots/
+
+# Documentación temporal y análisis
+*_LOGICA.md
+ANALISIS_*.md
+PLAN_*.md
+PROYECTO_*.md
+INFORME_*.md
+REPORTE_*.md
+RESUMEN_*.md
+INSTRUCCIONES_*.md
+SOLUCION_*.md
+FIX_*.md
+REFACTOR_*.md
+PROBLEMA_*.md
+VERIFICACION_*.md
+CAMBIOS_*.md
+COMPONENTES_*.md
+ESTADOS_*.md
+TABLA_*.md
+BUGS_*.md
+RECOMENDACIONES_*.md
+DISEÑO_*.md
+CURSOS_*.md
+31-*.md
+Apoderadosv2.md
+apoderados.md
+bd-nee.md
+flujo-matricula*.md
+AGENTS.md
+
+# Archivos SQL temporales
+*_*.sql
+0*.sql
+fix-*.sql
+restore-*.sql
+get_*.sql
+schema-actual.sql
+
+# Variables de entorno adicionales
+.env.local.*
+.env.*
+
+# Configuración local de Claude
+.claude/settings.local.json
+
+# Archivos batch de utilidad
+*.bat
+!REINICIAR_BACKEND.bat
+
+# Archivos de seed temporal

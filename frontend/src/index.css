@@ -1,0 +1,1589 @@
+/* Importar fuente Roboto - debe ir primero */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables CSS para la paleta especificada */
+:root {
+  /* Paleta principal modificada - colores más neutros */
+  --color-deep-teal: #2c3e50;
+  --color-medium-teal: #34495e;
+  --color-golden-yellow: #7f8c8d;
+  --color-warm-orange: #95a5a6;
+  --color-coral-red: #e74c3c;
+  
+  /* Colores base iOS Light */
+  --color-background: #FFFFFF;
+  --color-foreground: #1D1D1F;
+  --color-card: #F2F2F7;
+  --color-card-elevated: #FFFFFF;
+  --color-primary: var(--color-medium-teal);
+  --color-primary-light: #2A9D8F20;
+  --color-secondary: #6D6D70;
+  --color-border: #D1D1D6;
+  --color-input-bg: #F2F2F7;
+  --color-success: #34C759;
+  --color-warning: var(--color-warm-orange);
+  --color-error: var(--color-coral-red);
+  --color-info: #007AFF;
+  --color-text-light: #8E8E93;
+
+  /* Alias y variantes usados por componentes (mantener en sync con .dark) */
+  --color-text: var(--color-foreground);
+  --color-text-secondary: var(--color-secondary);
+  --color-surface: var(--color-card);
+  --color-background-alt: var(--color-card);
+  --color-bg-secondary: var(--color-card);
+  --color-secondary-light: #6d6d701a;
+  --color-error-light: #e74c3c1a;
+  --color-success-light: #34c7591a;
+  --color-warning-light: #95a5a61a;
+  --color-info-light: #007aff1a;
+
+  /* Sombras sutiles iOS */
+  --shadow-small: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-large: 0 8px 30px rgba(0, 0, 0, 0.12);
+  
+  /* Radios de borde iOS */
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-xl: 20px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #000000;
+    --color-foreground: #FFFFFF;
+    --color-card: #1C1C1E;
+    --color-card-elevated: #2C2C2E;
+    --color-primary: #3AB5A6;
+    --color-primary-light: #3AB5A630;
+    --color-secondary: #A1A1A6;
+    --color-border: #48484A;
+    --color-input-bg: #3A3A3C;
+    --color-text-light: #AEAEB2;
+    --shadow-small: 0 1px 3px rgba(255, 255, 255, 0.05);
+    --shadow-medium: 0 4px 12px rgba(255, 255, 255, 0.08);
+    --shadow-large: 0 8px 30px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.dark {
+  --color-background: #000000;
+  --color-foreground: #FFFFFF;
+  --color-card: #1C1C1E;
+  --color-card-elevated: #2C2C2E;
+  --color-primary: #3AB5A6;
+  --color-primary-light: #3AB5A630;
+  --color-secondary: #A1A1A6;
+  --color-border: #48484A;
+  --color-input-bg: #3A3A3C;
+  --color-text-light: #A1A1A6;
+  --color-success: #30D158;
+  --color-warning: var(--color-warm-orange);
+  --color-error: var(--color-coral-red);
+  --color-info: #64D2FF;
+
+  /* Alias y variantes usados por componentes (mantener en sync con :root) */
+  --color-text: var(--color-foreground);
+  --color-text-secondary: var(--color-secondary);
+  --color-surface: var(--color-card);
+  --color-background-alt: var(--color-card);
+  --color-bg-secondary: var(--color-card);
+  --color-secondary-light: #a1a1a633;
+  --color-error-light: #e74c3c33;
+  --color-success-light: #30d15833;
+  --color-warning-light: #95a5a633;
+  --color-info-light: #64d2ff33;
+}
+
+/* Estilos base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.uppercase-input {
+  text-transform: uppercase;
+}
+
+/* Componentes base estilo iOS */
+@layer components {
+  /* Contenedores principales optimizados para pantallas grandes */
+  .ios-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16;
+  }
+  
+  /* Contenedor específico para pantallas 1920px+ */
+  @media (min-width: 1920px) {
+    .ios-container {
+      max-width: 1400px;
+    }
+  }
+  
+  .ios-card {
+    background-color: var(--color-card-elevated);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--color-border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .ios-card:hover {
+    box-shadow: var(--shadow-large);
+    transform: translateY(-2px);
+  }
+  
+  /* Títulos con jerarquía iOS */
+  .ios-title-large {
+    @apply text-3xl font-bold tracking-tight;
+    color: var(--color-foreground);
+    font-weight: 700;
+  }
+  
+  .ios-title {
+    @apply text-xl font-semibold;
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+  
+  .ios-subtitle {
+    @apply text-base font-medium;
+    color: var(--color-foreground);
+    font-weight: 500;
+  }
+  
+  .ios-body {
+    @apply text-sm;
+    color: var(--color-secondary);
+    font-weight: 400;
+  }
+  
+  .ios-caption {
+    @apply text-xs;
+    color: var(--color-text-light);
+    font-weight: 400;
+  }
+  
+  /* Formularios estilo iOS */
+  .ios-form-section {
+    background-color: var(--color-card-elevated);
+    border-radius: var(--radius-large);
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--color-border);
+  }
+  
+  .ios-form-label {
+    display: block;
+    color: var(--color-foreground);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  
+  .ios-form-input {
+    width: 100%;
+    background-color: var(--color-input-bg);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--color-foreground);
+    transition: all 0.2s ease;
+    font-weight: 400;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  /* Excepciones: campos que NO deben estar en mayúsculas */
+  .ios-form-input[type="email"],
+  .ios-form-input[type="tel"],
+  .ios-form-input[type="number"],
+  .ios-form-input[type="date"],
+  .ios-form-input[type="password"],
+  .ios-form-input[name="celular"],
+  .ios-form-input[name="telefono"],
+  .ios-form-input[id="celular"],
+  .ios-form-input[id="telefono"],
+  .ios-form-input[id="email"],
+  select.ios-form-input {
+    text-transform: none;
+  }
+  
+  .ios-form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+    background-color: var(--color-card-elevated);
+  }
+  
+  .ios-form-input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  
+  .ios-form-input::placeholder {
+    color: var(--color-text-light);
+    opacity: 0.8;
+  }
+  
+  .ios-form-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--color-card);
+  }
+  
+  /* Enhanced contrast for dark mode */
+  .dark .ios-form-input {
+    border-width: 2px;
+    border-color: #636366;
+    color: #FFFFFF;
+    background-color: #2C2C2E;
+  }
+
+  .dark .ios-form-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light), var(--shadow-medium);
+    background-color: #3A3A3C;
+    color: #FFFFFF;
+  }
+
+  .dark .ios-form-input::placeholder {
+    color: #8E8E93;
+    opacity: 1;
+  }
+
+  /* Fix for select options in dark mode */
+  .dark select.ios-form-input option {
+    background-color: #2C2C2E;
+    color: #FFFFFF;
+  }
+  
+  /* Select elements styling */
+  .ios-form-input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: var(--webkit-calendar-filter);
+    cursor: pointer;
+  }
+  
+  /* Dark mode calendar picker */
+  .dark {
+    --webkit-calendar-filter: invert(1);
+  }
+  
+  /* Light mode calendar picker */
+  :root {
+    --webkit-calendar-filter: none;
+  }
+  
+  /* Enhanced select styling */
+  select.ios-form-input {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  
+  /* Dark mode select arrow */
+  .dark select.ios-form-input {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A1A1A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  }
+  
+  /* Input error states */
+  .ios-form-input.error {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 2px rgba(231, 111, 81, 0.1);
+  }
+  
+  .ios-form-input.error:focus {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.2);
+  }
+  
+  /* Loading spinner improvements */
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Focus trap for modals */
+  .modal-focus-trap {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+  }
+  
+  .modal-focus-trap:focus {
+    outline: none;
+  }
+  
+  /* Botones estilo iOS - Tamaños estandarizados */
+  .ios-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-medium);
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 24px;
+    min-height: 48px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Tamaños de botones estandarizados */
+  .ios-btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+  
+  .ios-btn-lg {
+    padding: 16px 32px;
+    font-size: 18px;
+    min-height: 56px;
+    font-weight: 600;
+  }
+  
+  /* Botón de anchura completa */
+  .ios-btn-full {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .ios-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  /* Botón primario */
+  .ios-btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  .ios-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .ios-btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  /* Botón secundario */
+  .ios-btn-secondary {
+    background-color: var(--color-card);
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+  }
+  
+  .ios-btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-input-bg);
+    transform: translateY(-1px);
+  }
+  
+  /* Botón de peligro */
+  .ios-btn-danger {
+    background-color: var(--color-error);
+    color: white;
+  }
+  
+  .ios-btn-danger:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+  }
+  
+  /* Botón de éxito */
+  .ios-btn-success {
+    background-color: var(--color-success);
+    color: white;
+  }
+  
+  /* Separadores sutiles */
+  .ios-divider {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 24px 0;
+  }
+  
+  /* Grid responsive iOS */
+  .ios-grid {
+    display: grid;
+    gap: 16px;
+  }
+  
+  .ios-grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    max-width: none;
+  }
+  
+  .ios-grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  /* Mejoras específicas para pantallas grandes */
+  @media (min-width: 1920px) {
+    .ios-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+    
+    .ios-grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+  }
+  
+  /* Estados de interacción */
+  .ios-interactive {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+  
+  .ios-interactive:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .ios-interactive:active {
+    transform: translateY(0);
+  }
+  
+  /* Efectos de cristal iOS */
+  .ios-glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dark .ios-glass {
+    background-color: rgba(28, 28, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Indicadores de estado */
+  .ios-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .ios-badge-success {
+    background-color: var(--color-success);
+    color: white;
+  }
+  
+  .ios-badge-warning {
+    background-color: var(--color-warning);
+    color: white;
+  }
+  
+  .ios-badge-error {
+    background-color: var(--color-error);
+    color: white;
+  }
+  
+  .ios-badge-info {
+    background-color: var(--color-info);
+    color: white;
+  }
+  
+  /* Componente de progreso */
+  .ios-progress-step {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .ios-progress-step.completed::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    width: 40px;
+    height: 2px;
+    background-color: var(--color-success);
+    transform: translateY(-50%);
+    z-index: -1;
+  }
+  
+  .ios-progress-connector {
+    background: linear-gradient(90deg, var(--color-success) 0%, var(--color-border) 100%);
+    transition: all 0.3s ease;
+  }
+  
+  /* Header Compacto Optimizado */
+  .ios-header-compact {
+    background-color: var(--color-card-elevated);
+    border-radius: var(--radius-large);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-small);
+    border: 1px solid var(--color-border);
+  }
+
+  .ios-title-compact {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .ios-subtitle-compact {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.3;
+    margin: 2px 0 0 0;
+    letter-spacing: 0.01em;
+  }
+
+  /* Barra de Navegación Compacta */
+  .ios-navigation-bar {
+    background-color: var(--color-card-elevated);
+    border-radius: var(--radius-large);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-small);
+    border: 1px solid var(--color-border);
+  }
+
+  .ios-welcome-message {
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--color-foreground);
+  }
+  
+  .ios-user-role {
+    color: var(--color-secondary);
+    font-size: 0.875rem;
+    font-weight: 400;
+    margin-left: 8px;
+    opacity: 0.8;
+  }
+  
+  /* Ejemplo visual del RUT */
+  .rut-input-example {
+    background-color: #f0f9ff;
+    border: 2px solid #2563eb;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #1d4ed8;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+  }
+
+  /* Botones de Navegación Compactos */
+  .ios-btn-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-small);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    min-height: 36px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-card);
+    color: var(--color-foreground);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    /* Accesibilidad mejorada */
+    outline: none;
+    position: relative;
+  }
+
+  /* Focus visible para accesibilidad */
+  .ios-btn-nav:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .ios-btn-nav-active:focus-visible {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+  }
+
+  .ios-btn-nav:hover:not(:disabled) {
+    background-color: var(--color-input-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-small);
+  }
+
+  .ios-btn-nav-active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  .ios-btn-nav-active:hover:not(:disabled) {
+    background-color: var(--color-primary);
+    opacity: 0.9;
+  }
+
+  .ios-btn-nav-danger {
+    background-color: var(--color-error);
+    color: white;
+    border-color: var(--color-error);
+  }
+
+  .ios-btn-nav-danger:hover:not(:disabled) {
+    background-color: var(--color-error);
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* Utilidades adicionales */
+  .ios-text-primary {
+    color: var(--color-primary) !important;
+  }
+  
+  .ios-text-secondary {
+    color: var(--color-secondary) !important;
+  }
+  
+  .ios-text-muted {
+    color: var(--color-text-light) !important;
+  }
+  
+  .ios-bg-primary {
+    background-color: var(--color-primary) !important;
+  }
+  
+  .ios-bg-card {
+    background-color: var(--color-card-elevated) !important;
+  }
+  
+  /* Espaciado consistente */
+  .ios-space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .ios-space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  /* Optimizaciones para pantallas grandes (1920px+) */
+  @media (min-width: 1920px) {
+    .ios-header-compact {
+      padding: 20px 24px;
+    }
+
+    .ios-title-compact {
+      font-size: 1.75rem;
+    }
+
+    .ios-subtitle-compact {
+      font-size: 1rem;
+    }
+
+    .ios-navigation-bar {
+      padding: 18px 24px;
+    }
+
+    .ios-welcome-message {
+      font-size: 1.25rem;
+    }
+
+    .ios-btn-nav {
+      padding: 10px 20px;
+      min-height: 40px;
+      font-size: 15px;
+    }
+  }
+
+  /* Mejoras responsive para tablets */
+  @media (max-width: 1024px) {
+    .ios-header-compact .flex {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .ios-header-compact img {
+      height: 3rem;
+      width: 3rem;
+    }
+
+    .ios-title-compact {
+      font-size: 1.375rem;
+    }
+  }
+
+  /* Mejoras responsive para móviles */
+  @media (max-width: 768px) {
+    .ios-container {
+      @apply px-3;
+    }
+    
+    .ios-card {
+      border-radius: var(--radius-medium);
+    }
+
+    /* Header compacto en móvil */
+    .ios-header-compact {
+      padding: 12px 16px;
+      border-radius: var(--radius-medium);
+    }
+
+    .ios-header-compact .flex {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .ios-header-compact .justify-between {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .ios-header-compact img {
+      height: 2.5rem;
+      width: 2.5rem;
+    }
+
+    .ios-title-compact {
+      font-size: 1.25rem;
+    }
+
+    .ios-subtitle-compact {
+      font-size: 0.8125rem;
+    }
+
+    /* Navegación en móvil */
+    .ios-navigation-bar {
+      padding: 12px 16px;
+      border-radius: var(--radius-medium);
+    }
+
+    .ios-welcome-message {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .ios-btn-nav {
+      padding: 6px 12px;
+      min-height: 32px;
+      font-size: 13px;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    /* Layout responsive de botones en móvil */
+    .ios-navigation-bar .flex-wrap {
+      justify-content: flex-start;
+      gap: 6px;
+    }
+    
+    .ios-btn {
+      width: 100%;
+      justify-content: center;
+      min-height: 52px;
+      font-size: 16px;
+    }
+    
+    .ios-btn-sm {
+      min-height: 44px;
+      font-size: 15px;
+    }
+    
+    .ios-btn-lg {
+      min-height: 60px;
+      font-size: 18px;
+    }
+    
+    .ios-grid-2,
+    .ios-grid-3 {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .ios-form-section {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+  }
+
+  /* Mejoras para móviles pequeños */
+  @media (max-width: 480px) {
+    .ios-header-compact .flex-col {
+      align-items: flex-start;
+    }
+
+    .ios-title-compact {
+      font-size: 1.125rem;
+    }
+
+    .ios-subtitle-compact {
+      font-size: 0.75rem;
+    }
+
+    .ios-welcome-message {
+      font-size: 0.9375rem;
+    }
+
+    .ios-btn-nav {
+      padding: 4px 8px;
+      min-height: 28px;
+      font-size: 12px;
+      max-width: 100px;
+    }
+  }
+}
+
+/* Ensure buttons in receipt modal are always visible */
+.no-print {
+  visibility: visible !important;
+  position: relative;
+  z-index: 999;
+  pointer-events: auto !important;
+}
+
+/* Prevent hover interference with receipt buttons */
+.no-print button {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+  position: relative;
+  z-index: 1000;
+}
+
+/* Print Styles for Receipt */
+@media print {
+  /* Hide everything except receipt */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  /* Show only receipt content */
+  .receipt-document, 
+  .receipt-document * {
+    visibility: visible !important;
+  }
+  
+  /* Hide no-print elements */
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Hide modal overlay and background elements */
+  .fixed.inset-0.bg-black,
+  .fixed.inset-0 {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Position receipt document for print */
+  .receipt-document {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: white !important;
+    color: #000 !important;
+    font-family: 'Inter', 'Arial', sans-serif !important;
+    z-index: 9999 !important;
+  }
+  
+  /* Set page size to Chile Letter (8.5" x 11") */
+  @page {
+    size: 8.5in 11in;
+    margin: 0.75in;
+  }
+  
+  /* Receipt document styles */
+  .receipt-document {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 7in; /* 8.5in - 1.5in margins */
+    min-height: 9.5in; /* 11in - 1.5in margins */
+    background: white !important;
+    color: #000 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Print-only elements */
+  .print-only {
+    display: none;
+  }
+  
+  @media print {
+    .print-only {
+      display: block !important;
+    }
+  }
+  
+  /* Typography adjustments for print */
+  .receipt-document h1 {
+    font-size: 13pt !important;
+    font-weight: bold !important;
+    color: #264653 !important;
+  }
+  
+  .receipt-document h2 {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    margin-bottom: 6pt !important;
+    color: #264653 !important;
+  }
+  
+  .receipt-document h3 {
+    font-size: 11pt !important;
+    font-weight: 600 !important;
+    color: #2A9D8F !important;
+  }
+  
+  .receipt-document h4 {
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    margin-bottom: 4pt !important;
+    color: #264653 !important;
+  }
+  
+  /* Print-specific color adjustments */
+  .receipt-document .text-xs {
+    font-size: 7pt !important;
+    color: #2A9D8F !important;
+  }
+  
+  .receipt-document .text-sm {
+    font-size: 8pt !important;
+  }
+  
+  .receipt-document .text-base {
+    font-size: 9pt !important;
+  }
+  
+  .receipt-document .text-lg {
+    font-size: 10pt !important;
+  }
+  
+  .receipt-document .text-xl {
+    font-size: 11pt !important;
+  }
+  
+  /* Ensure consistent borders and spacing in print */
+  .receipt-document .border-b-2 {
+    border-bottom: 3pt solid #000 !important;
+  }
+  
+  .receipt-document .border-t-2 {
+    border-top: 2pt solid #000 !important;
+  }
+  
+  .receipt-document .border-dashed {
+    border-style: dashed !important;
+    border-color: #000 !important;
+    border-width: 1pt !important;
+  }
+  
+  .receipt-document .rounded-lg,
+  .receipt-document .rounded-xl,
+  .receipt-document .rounded-2xl {
+    border-radius: 6pt !important;
+  }
+  
+  /* Convert all colored text to black/gray for B&W printing */
+  .receipt-document * {
+    color: #000 !important;
+  }
+  
+  /* Remove all background colors for print */
+  .receipt-document [style*="background-color"] {
+    background-color: transparent !important;
+    border: 1pt solid #000 !important;
+  }
+  
+  .receipt-document [style*="var(--color-primary-light)"] {
+    background-color: transparent !important;
+    border: 2pt solid #000 !important;
+  }
+  
+  .receipt-document [style*="var(--color-card)"] {
+    background-color: transparent !important;
+    border: 1pt solid #666 !important;
+  }
+  
+  /* Strengthen visual hierarchy with borders instead of colors */
+  .receipt-document .w-1 {
+    background-color: #000 !important;
+    width: 3pt !important;
+  }
+  
+  /* Make section headers more prominent */
+  .receipt-document h1,
+  .receipt-document h2,
+  .receipt-document h3,
+  .receipt-document h4 {
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+  }
+  
+  /* Strengthen important elements */
+  .receipt-document .font-bold {
+    font-weight: bold !important;
+  }
+  
+  .receipt-document .font-semibold {
+    font-weight: 600 !important;
+  }
+  
+  /* Print-friendly background colors */
+  .receipt-document [style*="background-color"] {
+    background-color: transparent !important;
+    border: 1pt solid #ccc !important;
+  }
+  
+  /* Grid adjustments for print - Use flexbox instead of table */
+  .receipt-document .grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    gap: 8pt !important;
+  }
+  
+  .receipt-document .grid-cols-2 {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    gap: 12pt !important;
+  }
+  
+  .receipt-document .grid-cols-2 > div {
+    flex: 1 1 calc(50% - 6pt) !important;
+    min-width: calc(50% - 6pt) !important;
+    display: block !important;
+    vertical-align: top !important;
+    margin-bottom: 8pt !important;
+  }
+  
+  .receipt-document .grid-cols-3 {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    gap: 8pt !important;
+  }
+  
+  .receipt-document .grid-cols-3 > div {
+    flex: 1 1 calc(33.33% - 6pt) !important;
+    min-width: calc(33.33% - 6pt) !important;
+    display: block !important;
+    vertical-align: top !important;
+    margin-bottom: 6pt !important;
+  }
+  
+  /* Fix flex layouts in print */
+  .receipt-document .flex {
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .receipt-document .flex.items-start {
+    align-items: flex-start !important;
+  }
+  
+  .receipt-document .flex.items-center {
+    align-items: center !important;
+  }
+  
+  .receipt-document .flex.justify-between {
+    justify-content: space-between !important;
+  }
+  
+  .receipt-document .flex.justify-center {
+    justify-content: center !important;
+  }
+  
+  .receipt-document .space-x-3 > * + * {
+    margin-left: 9pt !important;
+  }
+  
+  .receipt-document .space-x-4 > * + * {
+    margin-left: 12pt !important;
+  }
+  
+  .receipt-document .space-x-6 > * + * {
+    margin-left: 18pt !important;
+  }
+  
+  .receipt-document .space-y-1 > * + * {
+    margin-top: 3pt !important;
+  }
+  
+  .receipt-document .space-y-2 > * + * {
+    margin-top: 6pt !important;
+  }
+  
+  /* Logo sizing for print */
+  .receipt-document img {
+    max-height: 36pt !important;
+    width: auto !important;
+    display: block !important;
+  }
+  
+  /* Text alignments for print */
+  .receipt-document .text-center {
+    text-align: center !important;
+  }
+  
+  .receipt-document .text-right {
+    text-align: right !important;
+  }
+  
+  .receipt-document .text-left {
+    text-align: left !important;
+  }
+  
+  /* Display fixes for print */
+  .receipt-document .inline-block {
+    display: inline-block !important;
+  }
+  
+  .receipt-document .block {
+    display: block !important;
+  }
+  
+  .receipt-document .flex-shrink-0 {
+    flex-shrink: 0 !important;
+  }
+  
+  /* Width and height constraints */
+  .receipt-document .w-1 {
+    width: 3pt !important;
+  }
+  
+  .receipt-document .h-6,
+  .receipt-document .h-4 {
+    height: 18pt !important;
+  }
+  
+  .receipt-document .h-24 {
+    height: 72pt !important;
+  }
+  
+  .receipt-document .h-8 {
+    height: 24pt !important;
+  }
+  
+  .receipt-document .h-1 {
+    height: 3pt !important;
+  }
+  
+  .receipt-document .w-16 {
+    width: 48pt !important;
+  }
+  
+  .receipt-document .w-20 {
+    width: 60pt !important;
+  }
+  
+  /* Signature area spacing */
+  .receipt-document .mt-16,
+  .receipt-document .mt-12 {
+    margin-top: 36pt !important;
+  }
+  
+  .receipt-document .mb-6,
+  .receipt-document .mb-4 {
+    margin-bottom: 18pt !important;
+  }
+  
+  .receipt-document .mb-2,
+  .receipt-document .mb-1 {
+    margin-bottom: 6pt !important;
+  }
+  
+  .receipt-document .mt-3,
+  .receipt-document .mt-2 {
+    margin-top: 9pt !important;
+  }
+  
+  .receipt-document .p-3,
+  .receipt-document .p-4 {
+    padding: 12pt !important;
+  }
+  
+  .receipt-document .p-2 {
+    padding: 6pt !important;
+  }
+  
+  .receipt-document .p-1 {
+    padding: 3pt !important;
+  }
+  
+  .receipt-document .gap-12 {
+    gap: 36pt !important;
+  }
+  
+  .receipt-document .gap-8 {
+    gap: 24pt !important;
+  }
+  
+  .receipt-document .gap-6 {
+    gap: 18pt !important;
+  }
+  
+  .receipt-document .gap-4 {
+    gap: 12pt !important;
+  }
+  
+  /* Border styles */
+  .receipt-document .border-b {
+    border-bottom: 1pt solid #ccc !important;
+  }
+  
+  .receipt-document .border-t {
+    border-top: 1pt solid #666 !important;
+  }
+  
+  /* Color overrides for print */
+  .receipt-document .text-blue-700 {
+    color: #000 !important;
+    font-weight: bold;
+  }
+  
+  .receipt-document .text-gray-800 {
+    color: #000 !important;
+  }
+  
+  .receipt-document .text-gray-700 {
+    color: #333 !important;
+  }
+  
+  .receipt-document .text-gray-600 {
+    color: #666 !important;
+  }
+  
+  .receipt-document .text-gray-500 {
+    color: #999 !important;
+  }
+  
+  /* Remove background colors for print */
+  .receipt-document .bg-blue-600 {
+    background: none !important;
+    color: #000 !important;
+  }
+}
+
+/* Smart Search Component Styles */
+@layer components {
+  .smart-search-container {
+    position: relative;
+    width: 100%;
+  }
+
+  .smart-search-input {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-border);
+    color: var(--color-foreground);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 16px;
+    box-shadow: var(--shadow-small);
+  }
+
+  .smart-search-input:focus {
+    background-color: var(--color-card-elevated);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light), var(--shadow-medium);
+    outline: none;
+  }
+
+  .smart-search-input::placeholder {
+    color: var(--color-secondary);
+    opacity: 0.8;
+  }
+
+  .smart-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--color-card-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow-large);
+    margin-top: 4px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .student-result-card {
+    transition: all 0.15s ease-out;
+    border-radius: var(--radius-medium);
+    margin: 4px;
+  }
+
+  .student-result-card:hover {
+    background-color: var(--color-input-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-small);
+  }
+
+  .student-result-card:first-child {
+    border-top-left-radius: var(--radius-large);
+    border-top-right-radius: var(--radius-large);
+  }
+
+  .student-result-card:last-child {
+    border-bottom-left-radius: var(--radius-large);
+    border-bottom-right-radius: var(--radius-large);
+  }
+
+  .guardian-card {
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .guardian-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-small);
+  }
+
+  /* Dark mode adjustments */
+  .dark .smart-search-input {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-border);
+    color: var(--color-foreground);
+  }
+
+  .dark .smart-search-input:focus {
+    background-color: var(--color-card-elevated);
+    border-color: var(--color-primary);
+  }
+
+  .dark .smart-search-results {
+    background-color: var(--color-card-elevated);
+    border-color: var(--color-border);
+  }
+
+  .dark .student-result-card:hover {
+    background-color: var(--color-input-bg);
+  }
+
+  /* Responsive adjustments for smart search */
+  @media (max-width: 768px) {
+    .smart-search-input {
+      font-size: 16px; /* Prevent zoom on iOS */
+      padding: 16px 12px 16px 48px;
+    }
+
+    .smart-search-results {
+      max-height: 70vh;
+      border-radius: var(--radius-medium);
+    }
+
+    .student-result-card {
+      padding: 16px;
+      margin: 2px;
+    }
+
+    .guardian-card {
+      margin-bottom: 12px;
+    }
+
+    /* Stack guardian cards vertically on mobile */
+    .student-result-card .grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    /* Adjust typography for mobile */
+    .student-result-card h3 {
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .guardian-card h4 {
+      font-size: 14px;
+    }
+  }
+
+  /* Large screen optimizations (1920px+) */
+  @media (min-width: 1920px) {
+    .smart-search-container .ios-card {
+      max-width: 1200px;
+      padding: 2rem;
+    }
+
+    .smart-search-input {
+      font-size: 18px;
+      padding: 20px 16px 20px 56px;
+    }
+
+    .student-result-card {
+      padding: 24px;
+    }
+
+    .guardian-card {
+      padding: 20px;
+    }
+
+    .student-result-card h3 {
+      font-size: 20px;
+    }
+
+    .guardian-card h4 {
+      font-size: 16px;
+    }
+  }
+
+  /* Animation for search results appearance */
+  .smart-search-results {
+    animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Loading state styles */
+  .smart-search-loading {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .smart-search-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.1) 50%,
+      transparent 100%
+    );
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* Accessibility improvements */
+  .student-result-card:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    background-color: var(--color-primary-light);
+  }
+
+  .smart-search-input:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-light), var(--shadow-medium);
+  }
+
+  /* High contrast mode adjustments */
+  @media (prefers-contrast: high) {
+    .smart-search-input {
+      border-width: 2px;
+    }
+
+    .student-result-card {
+      border: 1px solid var(--color-border);
+    }
+
+    .guardian-card {
+      border-width: 2px;
+    }
+    
+    .ios-form-input {
+      border-width: 3px;
+    }
+    
+    .ios-btn {
+      border-width: 2px;
+    }
+    
+    .ios-card {
+      border-width: 2px;
+    }
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .smart-search-results {
+      animation: none;
+    }
+
+    .student-result-card,
+    .guardian-card,
+    .smart-search-input {
+      transition: none;
+    }
+
+    .student-result-card:hover,
+    .guardian-card:hover {
+      transform: none;
+    }
+  }
+
+  /* Print styles for smart search (hide it) */
+  @media print {
+    .smart-search-container {
+      display: none !important;
+    }
+  }
+}
