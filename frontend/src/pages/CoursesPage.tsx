@@ -221,7 +221,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ userRole, currentYear }) => {
 
       if (response.ok) {
         const result = await response.json();
-        toast.info(result.message);
+        toast.success(result.message);
         loadCourses();
       } else {
         const error = await response.json();
