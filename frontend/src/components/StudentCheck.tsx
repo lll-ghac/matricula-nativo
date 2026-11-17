@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { StudentData } from '../types';
+import { useToast } from '../context/ToastContext';
 
 // Definimos las props que el componente espera, incluyendo la función callback
 interface StudentCheckProps {
@@ -8,6 +9,7 @@ interface StudentCheckProps {
 }
 
 const StudentCheck: React.FC<StudentCheckProps> = ({ onStudentFound }) => {
+  const toast = useToast();
   const [rut, setRut] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +47,7 @@ const StudentCheck: React.FC<StudentCheckProps> = ({ onStudentFound }) => {
     setExistingStudent(null);
     setRut('');
     // Aquí podríamos agregar navegación directa a Gestión de Estudiantes
-    alert('Vaya a "Gestión de Estudiantes" para editar los datos del estudiante.');
+    toast.info('Vaya a "Gestión de Estudiantes" para editar los datos del estudiante.');
   };
 
   const handleCancelEdit = () => {
@@ -83,7 +85,7 @@ const StudentCheck: React.FC<StudentCheckProps> = ({ onStudentFound }) => {
       } else if (data.status === 'exists') {
         // Estudiante ya matriculado y activo, mostrar alerta y no continuar.
         console.log('⚠️ Estudiante ya existe y está activo:', data.message);
-        alert(data.message); // Muestra el mensaje del backend, ej: "El alumno ya se encuentra Matriculado..."
+        toast.info(data.message); // Muestra el mensaje del backend, ej: "El alumno ya se encuentra Matriculado..."
         setRut(''); // Limpiar el input
       } else {
         // Manejar cualquier otro caso inesperado

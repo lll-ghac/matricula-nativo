@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Database, Download, Plus, Trash2, Clock, RefreshCw, AlertCircle, RotateCcw, Upload, FileText, ExternalLink, Key } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface BackupData {
   filename: string;
@@ -31,6 +33,8 @@ interface BackupStats {
 }
 
 const BackupPanel: React.FC = () => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [backups, setBackups] = useState<BackupData[]>([]);
   const [stats] = useState<BackupStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,7 +121,7 @@ const BackupPanel: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`✅ Respaldo de PostgreSQL creado exitosamente: ${data.filename}`);
+        toast.success(`✅ Respaldo de PostgreSQL creado exitosamente: ${data.filename}`);
         await loadData(); // Recargar la lista
       } else {
         const errorData = await response.json();
@@ -125,7 +129,7 @@ const BackupPanel: React.FC = () => {
       }
     } catch (error) {
       console.error('Error creating backup:', error);
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setCreating(false);
     }
@@ -137,7 +141,7 @@ const BackupPanel: React.FC = () => {
   };
 
   const handleDelete = async (filename: string) => {
-    if (!window.confirm(`¿Está seguro de que desea eliminar el respaldo "${filename}"?\n\nEsta acción no se puede deshacer.`)) {
+    if (!(await confirm(`¿Está seguro de que desea eliminar el respaldo "${filename}"?\n\nEsta acción no se puede deshacer.`))) {
       return;
     }
 
@@ -148,7 +152,7 @@ const BackupPanel: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Respaldo eliminado exitosamente');
+        toast.success('✅ Respaldo eliminado exitosamente');
         await loadData(); // Recargar la lista
       } else {
         const errorData = await response.json();
@@ -156,12 +160,12 @@ const BackupPanel: React.FC = () => {
       }
     } catch (error) {
       console.error('Error deleting backup:', error);
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
   const handleRestore = async (_filename: string) => {
-    alert('La restauración desde PostgreSQL aún no está implementada.');
+    toast.info('La restauración desde PostgreSQL aún no está implementada.');
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,24 +174,24 @@ const BackupPanel: React.FC = () => {
 
     // Validar nombre de archivo
     if (!file.name.match(/^backup_matricula_[\d\-_]+\.zip$/)) {
-      alert('❌ Nombre de archivo inválido.\n\nEl archivo debe tener el formato: backup_matricula_YYYYMMDD_HHMMSS.zip');
+      toast.error('❌ Nombre de archivo inválido.\n\nEl archivo debe tener el formato: backup_matricula_YYYYMMDD_HHMMSS.zip');
       event.target.value = '';
       return;
     }
 
     // Validar tamaño (100MB)
     if (file.size > 100 * 1024 * 1024) {
-      alert('❌ El archivo es demasiado grande.\n\nTamaño máximo permitido: 100MB');
+      toast.error('❌ El archivo es demasiado grande.\n\nTamaño máximo permitido: 100MB');
       event.target.value = '';
       return;
     }
 
-    const confirmUpload = window.confirm(
+    const confirmUpload = (await confirm(
       `¿Desea subir el siguiente respaldo al servidor?\n\n` +
       `Archivo: ${file.name}\n` +
       `Tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB\n\n` +
       `El archivo será validado y guardado en el directorio de respaldos.`
-    );
+    ));
 
     if (!confirmUpload) {
       event.target.value = '';
@@ -207,7 +211,7 @@ const BackupPanel: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(
+        toast.success(
           `✅ ¡Respaldo subido exitosamente!\n\n` +
           `Archivo: ${data.filename}\n` +
           `Tamaño: ${data.sizeFormatted}\n\n` +
@@ -220,7 +224,7 @@ const BackupPanel: React.FC = () => {
       }
     } catch (error) {
       console.error('Error uploading backup:', error);
-      alert(`❌ Error subiendo respaldo:\n\n${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error subiendo respaldo:\n\n${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setUploading(false);
       event.target.value = ''; // Limpiar el input

@@ -8,6 +8,8 @@ import { nacionalidades, parentescoOptions } from '../utils/chilean-data';
 import { convertToISO, convertFromISO } from '../utils/dateUtils';
 import { calculateDV } from '../utils/rutUtils';
 import type { StudentData, ApoderadoData } from '../types';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface MatriculaV2FormProps {
   userRole?: 'Profesor' | 'Inspector' | 'Administrador';
@@ -20,6 +22,8 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
   currentYear: _currentYear,
   onBackToHome
 }) => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -97,7 +101,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
     const rut = studentData.rut;
 
     if (!rut) {
-      alert('Por favor, ingrese el RUT del estudiante');
+      toast.error('Por favor, ingrese el RUT del estudiante');
       return;
     }
 
@@ -207,13 +211,13 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
             dv: studentData.dv,
             apoderados: finalApoderados
           });
-          alert(`Datos de precarga encontrados para RUT ${rut}. Complete el formulario.`);
+          toast.info(`Datos de precarga encontrados para RUT ${rut}. Complete el formulario.`);
         } else {
-          alert(`El RUT ${rut} no está registrado. Complete el formulario para crear un nuevo estudiante.`);
+          toast.info(`El RUT ${rut} no está registrado. Complete el formulario para crear un nuevo estudiante.`);
         }
       } else if (result.status === 'exists') {
         // Estudiante ya existe y está activo
-        alert(result.message || 'El estudiante ya está matriculado. Use "Gestión de Estudiantes" para editar.');
+        toast.info(result.message || 'El estudiante ya está matriculado. Use "Gestión de Estudiantes" para editar.');
         // Limpiar formulario
         setStudentData(prev => ({
           ...prev,
@@ -224,7 +228,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
 
     } catch (err: any) {
       console.error('Error en la búsqueda del estudiante:', err);
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setSearching(false);
     }
@@ -248,7 +252,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
 
   const handleSearchGuardian = async (index: number, rut?: string) => {
     if (!rut) {
-      alert('Por favor, ingrese el RUT del apoderado.');
+      toast.error('Por favor, ingrese el RUT del apoderado.');
       return;
     }
 
@@ -259,7 +263,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
       });
 
       if (response.status === 404) {
-        alert(`El RUT ${rut} no está registrado. Complete el formulario para registrar este apoderado.`);
+        toast.info(`El RUT ${rut} no está registrado. Complete el formulario para registrar este apoderado.`);
         return;
       }
 
@@ -281,12 +285,12 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
           es_principal: newApoderados[index].es_principal // Preserve existing es_principal
         };
         setStudentData(prev => ({ ...prev, apoderados: newApoderados }));
-        alert(`Apoderado ${data.nombre} ${data.apellido_paterno} encontrado. Complete el parentesco.`);
+        toast.success(`Apoderado ${data.nombre} ${data.apellido_paterno} encontrado. Complete el parentesco.`);
       }
 
     } catch (err: any) {
       console.error('Error en la búsqueda del apoderado:', err);
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     }
   };
 
@@ -313,13 +317,13 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
     try {
       // Validaciones
       if (!studentData.tipo_religion) {
-        alert('La religión es obligatoria.');
+        toast.error('La religión es obligatoria.');
         setLoading(false);
         return;
       }
 
       if (!studentData.curso_base || !studentData.letra) {
-        alert('El curso y letra son obligatorios.');
+        toast.error('El curso y letra son obligatorios.');
         setLoading(false);
         return;
       }
@@ -327,7 +331,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
       // Validar que exista al menos un apoderado principal válido
       const apoderadoPrincipal = studentData.apoderados?.[0];
       if (!apoderadoPrincipal) {
-        alert('Debe registrar al menos un apoderado principal.');
+        toast.error('Debe registrar al menos un apoderado principal.');
         setLoading(false);
         return;
       }
@@ -348,19 +352,19 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
       // Validar RUT/DNI/Pasaporte del apoderado principal
       if (apoderadoPrincipal.tipo_documento === 'RUT') {
         if (!apoderadoPrincipal.rut || !apoderadoPrincipal.dv) {
-          alert('El RUT del apoderado principal es obligatorio.');
+          toast.error('El RUT del apoderado principal es obligatorio.');
           setLoading(false);
           return;
         }
       } else if (apoderadoPrincipal.tipo_documento === 'DNI') {
         if (!apoderadoPrincipal.dni) {
-          alert('El DNI del apoderado principal es obligatorio.');
+          toast.error('El DNI del apoderado principal es obligatorio.');
           setLoading(false);
           return;
         }
       } else if (apoderadoPrincipal.tipo_documento === 'Pasaporte') {
         if (!apoderadoPrincipal.pasaporte) {
-          alert('El Pasaporte del apoderado principal es obligatorio.');
+          toast.error('El Pasaporte del apoderado principal es obligatorio.');
           setLoading(false);
           return;
         }
@@ -368,7 +372,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
 
       for (const { campo, label } of camposObligatoriosApoderado) {
         if (!apoderadoPrincipal[campo as keyof typeof apoderadoPrincipal]) {
-          alert(`El campo "${label}" del apoderado principal es obligatorio.`);
+          toast.error(`El campo "${label}" del apoderado principal es obligatorio.`);
           setLoading(false);
           return;
         }
@@ -376,7 +380,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
 
       // Validar que el celular tenga formato válido (+569XXXXXXXX)
       if (!(apoderadoPrincipal.celular ?? '').match(/^\+569\d{8}$/)) {
-        alert('El celular del apoderado principal debe tener formato válido (+569XXXXXXXX).');
+        toast.error('El celular del apoderado principal debe tener formato válido (+569XXXXXXXX).');
         setLoading(false);
         return;
       }
@@ -395,19 +399,19 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
           // Si tiene algún dato, validar que tenga todos los campos obligatorios
           if (apoderadoSuplente.tipo_documento === 'RUT') {
             if (!apoderadoSuplente.rut || !apoderadoSuplente.dv) {
-              alert('Si ingresa un apoderado suplente, el RUT es obligatorio.');
+              toast.error('Si ingresa un apoderado suplente, el RUT es obligatorio.');
               setLoading(false);
               return;
             }
           } else if (apoderadoSuplente.tipo_documento === 'DNI') {
             if (!apoderadoSuplente.dni) {
-              alert('Si ingresa un apoderado suplente, el DNI es obligatorio.');
+              toast.error('Si ingresa un apoderado suplente, el DNI es obligatorio.');
               setLoading(false);
               return;
             }
           } else if (apoderadoSuplente.tipo_documento === 'Pasaporte') {
             if (!apoderadoSuplente.pasaporte) {
-              alert('Si ingresa un apoderado suplente, el Pasaporte es obligatorio.');
+              toast.error('Si ingresa un apoderado suplente, el Pasaporte es obligatorio.');
               setLoading(false);
               return;
             }
@@ -415,14 +419,14 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
 
           for (const { campo, label } of camposObligatoriosApoderado) {
             if (!apoderadoSuplente[campo as keyof typeof apoderadoSuplente]) {
-              alert(`Si ingresa un apoderado suplente, el campo "${label}" es obligatorio.`);
+              toast.error(`Si ingresa un apoderado suplente, el campo "${label}" es obligatorio.`);
               setLoading(false);
               return;
             }
           }
 
           if (!(apoderadoSuplente.celular ?? '').match(/^\+569\d{8}$/)) {
-            alert('El celular del apoderado suplente debe tener formato válido (+569XXXXXXXX).');
+            toast.error('El celular del apoderado suplente debe tener formato válido (+569XXXXXXXX).');
             setLoading(false);
             return;
           }
@@ -434,7 +438,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
         credentials: 'include'
       });
       if (!authCheck.ok) {
-        alert('No está autenticado. Por favor, inicie sesión.');
+        toast.error('No está autenticado. Por favor, inicie sesión.');
         setLoading(false);
         return;
       }
@@ -469,7 +473,7 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
         throw new Error(result.message || 'Error al guardar la matrícula');
       }
 
-      alert(isEditMode
+      toast.success(isEditMode
         ? '¡Matrícula actualizada exitosamente!'
         : '¡Matrícula creada exitosamente!');
 
@@ -477,13 +481,13 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
       if (onBackToHome) {
         onBackToHome();
       } else {
-        // Resetear formulario
-        window.location.reload();
+        // Resetear formulario (con margen para que se alcance a leer el aviso antes de recargar)
+        setTimeout(() => window.location.reload(), 1500);
       }
 
     } catch (error: any) {
       console.error('Error al guardar matrícula:', error);
-      alert('Error al guardar la matrícula: ' + error.message);
+      toast.error('Error al guardar la matrícula: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -525,8 +529,9 @@ const MatriculaV2Form: React.FC<MatriculaV2FormProps> = ({
   };
 
   // Limpiar formulario para nuevo estudiante
-  const handleNuevoEstudiante = () => {
-    if (confirm('¿Está seguro de que desea limpiar el formulario para crear un nuevo estudiante?')) {
+  const handleNuevoEstudiante = async () => {
+    const confirmed = await confirm('¿Está seguro de que desea limpiar el formulario para crear un nuevo estudiante?');
+    if (confirmed) {
       setIsEditMode(false);
       setStudentData({
         estado: 'matriculado',

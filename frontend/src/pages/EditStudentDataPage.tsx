@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, User, AlertCircle } from 'lucide-react';
 import { etnias, conQuienViveOptions } from '../utils/chilean-data';
+import { useToast } from '../context/ToastContext';
 
 interface Student {
   id: number;
@@ -30,6 +31,7 @@ interface EditStudentDataPageProps {
 }
 
 const EditStudentDataPage: React.FC<EditStudentDataPageProps> = ({ studentId, onBack, onUpdate }) => {
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
@@ -110,7 +112,7 @@ const EditStudentDataPage: React.FC<EditStudentDataPageProps> = ({ studentId, on
 
     } catch (error) {
       console.error('❌ Error al cargar datos:', error);
-      alert('Error al cargar los datos del estudiante');
+      toast.error('Error al cargar los datos del estudiante');
     } finally {
       setIsLoading(false);
     }
@@ -163,7 +165,7 @@ const EditStudentDataPage: React.FC<EditStudentDataPageProps> = ({ studentId, on
 
     } catch (error) {
       console.error('❌ Error al guardar:', error);
-      alert('Error al guardar los datos: ' + (error as Error).message);
+      toast.error('Error al guardar los datos: ' + (error as Error).message);
     } finally {
       setIsSaving(false);
     }

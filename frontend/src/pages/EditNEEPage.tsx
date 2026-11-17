@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Heart, AlertCircle } from 'lucide-react';
 import NEEForm from '../components/NEEForm';
+import { useToast } from '../context/ToastContext';
 
 interface NeeInfo {
   id: number;
@@ -26,6 +27,7 @@ interface EditNEEPageProps {
 }
 
 const EditNEEPage: React.FC<EditNEEPageProps> = ({ studentId, onBack, onUpdate }) => {
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
@@ -60,7 +62,7 @@ const EditNEEPage: React.FC<EditNEEPageProps> = ({ studentId, onBack, onUpdate }
 
     } catch (error) {
       console.error('❌ Error al cargar datos NEE:', error);
-      alert('Error al cargar los datos NEE del estudiante');
+      toast.error('Error al cargar los datos NEE del estudiante');
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +120,7 @@ const EditNEEPage: React.FC<EditNEEPageProps> = ({ studentId, onBack, onUpdate }
 
     } catch (error) {
       console.error('❌ Error al guardar NEE:', error);
-      alert('Error al guardar los datos NEE: ' + (error as Error).message);
+      toast.error('Error al guardar los datos NEE: ' + (error as Error).message);
     } finally {
       setIsSaving(false);
     }

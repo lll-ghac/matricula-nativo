@@ -3,6 +3,8 @@ import { GraduationCap, Search, Eye, Trash2, FileText, Download, List, Loader2, 
 import { formatBirthDate, formatDateTime } from '../utils/dateUtils';
 import PDFReceipt from './PDFReceipt';
 import EditStudentModal from './EditStudentModal';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface Student {
   id: number;
@@ -43,6 +45,8 @@ interface StudentListProps {
 }
 
 const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademicInfo, onEditStudentData, onEditNEE, onViewReceipt }) => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,7 +146,13 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
   };
 
   const handleDelete = async (studentId: number) => {
-    if (!window.confirm('¿Está seguro de que desea enviar este estudiante a la papelera?')) {
+    const confirmed = await confirm({
+      title: 'Enviar a la papelera',
+      message: '¿Está seguro de que desea enviar este estudiante a la papelera?',
+      confirmText: 'Enviar a la papelera',
+      danger: true
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -165,10 +175,10 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
 
       // Recargar la lista de estudiantes
       fetchStudents();
-      alert('Estudiante enviado a la papelera correctamente');
+      toast.success('Estudiante enviado a la papelera correctamente');
     } catch (err: any) {
       setError(err.message);
-      alert('Error: ' + err.message);
+      toast.error('Error: ' + err.message);
     }
   };
 
@@ -181,7 +191,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
 
   const handleConfirmRetire = async () => {
     if (!studentToRetire || !retireDate || !retireObservation.trim()) {
-      alert('Por favor, complete la fecha de retiro y la observación.');
+      toast.error('Por favor, complete la fecha de retiro y la observación.');
       return;
     }
 
@@ -209,9 +219,9 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
       setRetireDate('');
       setRetireObservation('');
       fetchStudents();
-      alert('Estudiante cambiado a estado Retirado correctamente');
+      toast.success('Estudiante cambiado a estado Retirado correctamente');
     } catch (err: any) {
-      alert('Error: ' + err.message);
+      toast.error('Error: ' + err.message);
     }
   };
 
@@ -479,7 +489,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
       }
     } catch (err: any) {
       console.error('Error viewing student:', err);
-      alert('Error al obtener datos del estudiante: ' + err.message);
+      toast.error('Error al obtener datos del estudiante: ' + err.message);
     }
   };
 
@@ -513,7 +523,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
       setShowReceipt(true);
     } catch (err: any) {
       console.error('Error al obtener datos del estudiante:', err);
-      alert('Error al cargar el comprobante: ' + err.message);
+      toast.error('Error al cargar el comprobante: ' + err.message);
     }
   };
 
@@ -581,7 +591,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
 
   const generateFullList = async () => {
     if (filteredStudents.length === 0) {
-      alert('No hay estudiantes para generar la lista');
+      toast.info('No hay estudiantes para generar la lista');
       return;
     }
 
@@ -635,7 +645,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
       pdf.save(`Lista_Estudiantes_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error al generar el PDF');
+      toast.error('Error al generar el PDF');
     } finally {
       setIsGeneratingList(false);
     }

@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { formatDate as formatDateUtil } from '../utils/dateUtils';
 import type { StudentData } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface GuardianReceiptProps {
   student: StudentData;
@@ -11,6 +12,7 @@ interface GuardianReceiptProps {
 }
 
 const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear, onPrintReady }) => {
+  const toast = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const formatRut = (rut?: string | number, dv?: string) => {
@@ -32,7 +34,7 @@ const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear,
 
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
-      alert('Por favor permite las ventanas emergentes para imprimir');
+      toast.error('Por favor permite las ventanas emergentes para imprimir');
       return;
     }
 
@@ -115,7 +117,7 @@ const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear,
       pdf.save(`Comprobante_Apoderado_${student.nombres}_${student.apellido_paterno}_${currentYear}.pdf`);
     } catch (error) {
       console.error('Error al generar PDF:', error);
-      alert('Error al generar el PDF del comprobante');
+      toast.error('Error al generar el PDF del comprobante');
     }
   };
 

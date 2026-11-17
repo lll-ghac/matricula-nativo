@@ -1,5 +1,6 @@
 import React from 'react';
 import type { StudentData, ApoderadoData } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface StudentReceiptTextProps {
   studentData: StudentData;
@@ -7,6 +8,7 @@ interface StudentReceiptTextProps {
 }
 
 const StudentReceiptText: React.FC<StudentReceiptTextProps> = ({ studentData, apoderados }) => {
+  const toast = useToast();
   const formatRut = (rut?: string, dv?: string) => {
     if (!rut || !dv) return 'No especificado';
     return `${rut}-${dv}`;
@@ -115,7 +117,7 @@ Teléfono: [TELÉFONO DEL ESTABLECIMIENTO]
   const handleCopyToClipboard = () => {
     const text = generateReceiptText();
     navigator.clipboard.writeText(text).then(() => {
-      alert('Comprobante copiado al portapapeles');
+      toast.success('Comprobante copiado al portapapeles');
     }).catch(() => {
       // Fallback para navegadores sin soporte
       const textArea = document.createElement('textarea');
@@ -124,7 +126,7 @@ Teléfono: [TELÉFONO DEL ESTABLECIMIENTO]
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Comprobante copiado al portapapeles');
+      toast.success('Comprobante copiado al portapapeles');
     });
   };
 

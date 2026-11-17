@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, FileText, FileSpreadsheet, Database } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 interface Course {
   id: number;
@@ -9,6 +10,7 @@ interface Course {
 }
 
 const ExportPanel: React.FC = () => {
+  const toast = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [exportType, setExportType] = useState('csv'); // Default to CSV
@@ -45,7 +47,7 @@ const ExportPanel: React.FC = () => {
 
       if (type === 'course') {
         if (!selectedCourse) {
-          alert('Por favor, seleccione un curso para exportar.');
+          toast.error('Por favor, seleccione un curso para exportar.');
           setLoading(false);
           return;
         }
@@ -53,7 +55,7 @@ const ExportPanel: React.FC = () => {
         // Encontrar el curso seleccionado para construir el nombre completo
         const course = courses.find(c => c.codigo === selectedCourse);
         if (!course) {
-          alert('Curso no encontrado.');
+          toast.error('Curso no encontrado.');
           setLoading(false);
           return;
         }
@@ -65,12 +67,12 @@ const ExportPanel: React.FC = () => {
         filename = `nomina_${course.codigo}.${exportType}`;
       } else if (type === 'individual') {
         // TODO: Implement individual student export logic
-        alert('La exportación de fichas individuales aún no está implementada.');
+        toast.info('La exportación de fichas individuales aún no está implementada.');
         setLoading(false);
         return;
       } else if (type === 'backup') {
         // TODO: Implement course backup logic
-        alert('La exportación de respaldo por curso aún no está implementada.');
+        toast.info('La exportación de respaldo por curso aún no está implementada.');
         setLoading(false);
         return;
       } else {
@@ -103,11 +105,11 @@ const ExportPanel: React.FC = () => {
       document.body.removeChild(link);
 
       const course = courses.find(c => c.codigo === selectedCourse);
-      alert(`✅ Exportación de ${course?.codigo || selectedCourse} en formato ${exportType.toUpperCase()} descargada exitosamente.`);
+      toast.success(`✅ Exportación de ${course?.codigo || selectedCourse} en formato ${exportType.toUpperCase()} descargada exitosamente.`);
       
     } catch (error) {
       console.error('❌ Error en exportación:', error);
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -162,11 +164,11 @@ const ExportPanel: React.FC = () => {
       document.body.removeChild(link);
       
       console.log('✅ Exportación completa descargada exitosamente');
-      alert('✅ Archivo descargado exitosamente. Contiene todos los datos de estudiantes con sus apoderados principal y suplente.');
+      toast.success('✅ Archivo descargado exitosamente. Contiene todos los datos de estudiantes con sus apoderados principal y suplente.');
       
     } catch (error) {
       console.error('❌ Error en exportación completa:', error);
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoadingComplete(false);
     }

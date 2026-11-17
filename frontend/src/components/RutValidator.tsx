@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, Users, GraduationCap, Search, RefreshCw } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 interface ValidationResult {
   type: 'student' | 'guardian';
@@ -13,6 +14,7 @@ interface ValidationResult {
 }
 
 const RutValidator: React.FC = () => {
+  const toast = useToast();
   const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
   const [isValidating, setIsValidating] = useState(false);
   const [stats, setStats] = useState({
@@ -138,7 +140,7 @@ const RutValidator: React.FC = () => {
 
     } catch (error) {
       console.error('Error en validación:', error);
-      alert('Error al realizar la validación: ' + error);
+      toast.error('Error al realizar la validación: ' + error);
     } finally {
       setIsValidating(false);
     }

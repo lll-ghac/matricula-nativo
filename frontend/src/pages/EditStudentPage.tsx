@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Users, BookOpen, Save, AlertCircle, Plus, Search } from 'lucide-react';
 import { regions, nacionalidades, etnias, conQuienViveOptions, parentescoOptions, DEFAULT_REGION, DEFAULT_COMUNA, DEFAULT_ETNIA } from '../utils/chilean-data';
+import { useToast } from '../context/ToastContext';
 
 interface Student {
   id: number;
@@ -134,6 +135,7 @@ const formatPhoneNumber = (value: string): string => {
 };
 
 const EditStudentPage: React.FC<EditStudentPageProps> = ({ studentId, onBack, onUpdate }) => {
+  const toast = useToast();
   const [activeSection, setActiveSection] = useState<'student' | 'guardians' | 'suplentes' | 'academic'>('student');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -196,7 +198,7 @@ const EditStudentPage: React.FC<EditStudentPageProps> = ({ studentId, onBack, on
       
     } catch (error) {
       console.error('❌ Error al cargar datos:', error);
-      alert('Error al cargar los datos del estudiante');
+      toast.error('Error al cargar los datos del estudiante');
     } finally {
       setIsLoading(false);
     }
@@ -377,12 +379,12 @@ const EditStudentPage: React.FC<EditStudentPageProps> = ({ studentId, onBack, on
       }
       
       console.log('✅ Estudiante guardado exitosamente');
-      alert('Datos guardados exitosamente');
+      toast.success('Datos guardados exitosamente');
       onUpdate(); // Notificar al componente padre que se actualizó
       
     } catch (error) {
       console.error('❌ Error al guardar:', error);
-      alert('Error al guardar los datos: ' + (error as Error).message);
+      toast.error('Error al guardar los datos: ' + (error as Error).message);
     } finally {
       setIsSaving(false);
     }

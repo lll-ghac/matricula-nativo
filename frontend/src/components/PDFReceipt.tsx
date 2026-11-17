@@ -3,6 +3,7 @@ import { Download, Home, X } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import GuardianReceipt from './GuardianReceipt';
 import type { StudentData, ApoderadoData } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface PDFReceiptProps {
   student: StudentData;
@@ -17,6 +18,7 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
   onBackToHome,
   hideSuccessMessage = false
 }) => {
+  const toast = useToast();
   const [pdfUrl] = useState<string | null>(null);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [currentYear, setCurrentYear] = useState<number>(propCurrentYear || new Date().getFullYear());
@@ -141,7 +143,7 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
 
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
-      alert('Por favor, permite las ventanas emergentes para imprimir');
+      toast.error('Por favor, permite las ventanas emergentes para imprimir');
       return;
     }
 
@@ -208,13 +210,13 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
     const guardianReceiptElement = document.querySelector('[data-guardian-receipt]') as HTMLElement;
 
     if (!schoolReceiptElement || !guardianReceiptElement) {
-      alert('No se pudieron cargar los documentos para imprimir');
+      toast.error('No se pudieron cargar los documentos para imprimir');
       return;
     }
 
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
-      alert('Por favor, permite las ventanas emergentes para imprimir');
+      toast.error('Por favor, permite las ventanas emergentes para imprimir');
       return;
     }
 

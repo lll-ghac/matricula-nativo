@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, FileText, Users, Check, X, AlertTriangle, Download, Loader2 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 interface ImportResult {
   success: boolean;
@@ -10,6 +11,7 @@ interface ImportResult {
 }
 
 const UserImport: React.FC = () => {
+  const toast = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -21,7 +23,7 @@ const UserImport: React.FC = () => {
       setFile(selectedFile);
       setResult(null);
     } else {
-      alert('Por favor seleccione un archivo CSV válido.');
+      toast.error('Por favor seleccione un archivo CSV válido.');
     }
   };
 
@@ -44,7 +46,7 @@ const UserImport: React.FC = () => {
       setFile(droppedFile);
       setResult(null);
     } else {
-      alert('Por favor seleccione un archivo CSV válido.');
+      toast.error('Por favor seleccione un archivo CSV válido.');
     }
   };
 
@@ -67,11 +69,11 @@ const UserImport: React.FC = () => {
       if (response.ok) {
         setResult(data);
       } else {
-        alert(`Error: ${data.message}`);
+        toast.error(`Error: ${data.message}`);
       }
     } catch (error) {
       console.error('Error importing users:', error);
-      alert('Error al importar usuarios. Verifique su conexión.');
+      toast.error('Error al importar usuarios. Verifique su conexión.');
     } finally {
       setIsUploading(false);
     }

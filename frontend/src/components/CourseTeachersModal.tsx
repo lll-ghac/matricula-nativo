@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Plus, Trash2, AlertCircle, Check } from 'lucide-react';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface CourseTeacher {
   asignacion_id: number;
@@ -30,6 +31,7 @@ const CourseTeachersModal: React.FC<CourseTeachersModalProps> = ({
   courseName,
   onClose
 }) => {
+  const confirm = useConfirm();
   const [teachers, setTeachers] = useState<CourseTeacher[]>([]);
   const [allTeachers, setAllTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +129,7 @@ const CourseTeachersModal: React.FC<CourseTeachersModalProps> = ({
   };
 
   const handleRemoveTeacher = async (teacherId: number, tipoAsignacion: string) => {
-    if (!confirm('¿Está seguro de quitar este profesor del curso?')) {
+    if (!(await confirm('¿Está seguro de quitar este profesor del curso?'))) {
       return;
     }
 

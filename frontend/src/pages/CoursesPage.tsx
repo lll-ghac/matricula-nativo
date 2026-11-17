@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Plus, Edit2, Trash2, Users, Search, Filter } from 'lucide-react';
 import CourseFormModal from '../components/CourseFormModal';
 import CourseTeachersModal from '../components/CourseTeachersModal';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface Course {
   id: number;
@@ -59,6 +61,8 @@ interface CoursesPageProps {
 }
 
 const CoursesPage: React.FC<CoursesPageProps> = ({ userRole, currentYear }) => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,7 +119,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ userRole, currentYear }) => {
       }
     } catch (error) {
       console.error('Error cargando catálogos:', error);
-      alert('Error al cargar catálogos del sistema');
+      toast.error('Error al cargar catálogos del sistema');
     }
   };
 
@@ -145,7 +149,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ userRole, currentYear }) => {
       }
     } catch (error) {
       console.error('Error cargando cursos:', error);
-      alert('Error al cargar la lista de cursos');
+      toast.error('Error al cargar la lista de cursos');
       setCourses([]);
     } finally {
       setLoading(false);
@@ -195,7 +199,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ userRole, currentYear }) => {
       ? `⚠️ El curso ${course.codigo} tiene ${course.alumnos_matriculados} alumno(s) matriculado(s).\n\n¿Está seguro de eliminar este curso?\n(Los alumnos quedarán sin curso asignado)`
       : `¿Está seguro de eliminar el curso ${course.codigo}?`;
 
-    if (!confirm(confirmMessage)) {
+    if (!(await confirm(confirmMessage))) {
       return;
     }
 
@@ -217,15 +221,15 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ userRole, currentYear }) => {
 
       if (response.ok) {
         const result = await response.json();
-        alert(result.message);
+        toast.info(result.message);
         loadCourses();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || 'No se pudo eliminar el curso'}`);
+        toast.error(`Error: ${error.error || 'No se pudo eliminar el curso'}`);
       }
     } catch (error) {
       console.error('Error eliminando curso:', error);
-      alert('Error al eliminar el curso');
+      toast.error('Error al eliminar el curso');
     }
   };
 

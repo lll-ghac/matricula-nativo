@@ -329,6 +329,9 @@ async function createStudent(req, res) {
 async function getStudentById(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
     const yearVigente = await getAnioVigente();
     if (!yearVigente) {
       return res.status(500).json({ error: 'No se pudo obtener el año vigente' });
@@ -357,6 +360,7 @@ async function getStudentById(req, res) {
 
     res.json({
       ...student,
+      creado_en: student.fecha_creacion,
       prevision_salud: student.previsiones_salud?.nombre || null,
       apoderados: apoderadosOrdenados,
       nees
@@ -372,6 +376,9 @@ async function getStudentById(req, res) {
 async function updateStudent(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
     const studentData = req.body;
     const { nees, apoderados: allApoderados, ...restStudentData } = studentData;
     const shouldUpdateGuardians = allApoderados !== undefined;
@@ -486,6 +493,9 @@ async function updateStudent(req, res) {
 async function getStudentGuardians(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
 
     const relations = await prisma.alumno_apoderado.findMany({
       where: { alumno_id: BigInt(id) },
@@ -513,6 +523,9 @@ async function getStudentGuardians(req, res) {
 async function updateStudentGuardians(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
     const { guardians: allApoderados } = req.body;
 
     if (!allApoderados || !Array.isArray(allApoderados)) {
@@ -563,6 +576,9 @@ async function checkGuardianByRut(req, res) {
 async function updateGuardian(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de apoderado inválido. Debe ser un número.' });
+    }
     const { nombre, apellido_paterno, apellido_materno, parentesco, fecha_nacimiento, genero,
             nacionalidad, direccion, complemento_direccion, region, comuna, celular, email } = req.body;
 
@@ -620,6 +636,9 @@ async function searchGuardians(req, res) {
 async function deleteStudent(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
     const { motivo } = req.body;
     const yearVigente = await getAnioVigente();
 
@@ -735,6 +754,9 @@ async function exportStudents(req, res) {
 async function retireStudent(req, res) {
   try {
     const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
     const { fecha_retiro, observacion_retiro } = req.body;
 
     if (!fecha_retiro || !observacion_retiro?.trim()) {

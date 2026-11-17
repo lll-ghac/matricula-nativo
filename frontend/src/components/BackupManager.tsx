@@ -17,6 +17,8 @@ import {
   ExternalLink,
   Info
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface BackupFile {
   filename: string;
@@ -47,6 +49,8 @@ type TabType = 'local' | 'google-drive';
 type ViewType = 'dashboard' | 'schedules' | 'google-drive-setup';
 
 const BackupManager: React.FC = () => {
+  const toast = useToast();
+  const confirm = useConfirm();
   // Estados principales
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [activeTab, setActiveTab] = useState<TabType>('local');
@@ -162,7 +166,7 @@ const BackupManager: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Respaldo iniciado correctamente.\n\nEsto puede tomar varios minutos. El respaldo aparecerá en la lista cuando se complete.');
+        toast.success('✅ Respaldo iniciado correctamente.\n\nEsto puede tomar varios minutos. El respaldo aparecerá en la lista cuando se complete.');
 
         // Recargar después de un delay
         setTimeout(() => loadData(), 3000);
@@ -172,7 +176,7 @@ const BackupManager: React.FC = () => {
       }
     } catch (error) {
       console.error('Error creating backup:', error);
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setCreating(false);
     }
@@ -183,7 +187,7 @@ const BackupManager: React.FC = () => {
   };
 
   const handleDeleteLocal = async (filename: string) => {
-    if (!window.confirm(`¿Eliminar el respaldo "${filename}"?\n\nEsta acción no se puede deshacer.`)) {
+    if (!(await confirm(`¿Eliminar el respaldo "${filename}"?\n\nEsta acción no se puede deshacer.`))) {
       return;
     }
 
@@ -194,18 +198,18 @@ const BackupManager: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Respaldo eliminado');
+        toast.success('✅ Respaldo eliminado');
         fetchLocalBackups();
       } else {
         throw new Error('Error eliminando respaldo');
       }
     } catch (error) {
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
   const handleDeleteDrive = async (fileId: string) => {
-    if (!window.confirm('¿Eliminar este respaldo de Google Drive?\n\nEsta acción no se puede deshacer.')) {
+    if (!(await confirm('¿Eliminar este respaldo de Google Drive?\n\nEsta acción no se puede deshacer.'))) {
       return;
     }
 
@@ -216,11 +220,11 @@ const BackupManager: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Respaldo eliminado de Google Drive');
+        toast.success('✅ Respaldo eliminado de Google Drive');
         fetchDriveBackups();
       }
     } catch (error) {
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
@@ -237,13 +241,13 @@ const BackupManager: React.FC = () => {
         throw new Error('Error obteniendo URL de autenticación');
       }
     } catch (error) {
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Verifique que google-credentials.json existe'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Verifique que google-credentials.json existe'}`);
     }
   };
 
   const handleSaveAuthCode = async () => {
     if (!authCode.trim()) {
-      alert('⚠️ Por favor ingrese el código de autorización');
+      toast.error('⚠️ Por favor ingrese el código de autorización');
       return;
     }
 
@@ -257,7 +261,7 @@ const BackupManager: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Google Drive configurado exitosamente!\n\nLos respaldos automáticos ahora se subirán a Drive.');
+        toast.success('✅ Google Drive configurado exitosamente!\n\nLos respaldos automáticos ahora se subirán a Drive.');
         setDriveConfigured(true);
         setCurrentView('dashboard');
         setAuthCode('');
@@ -268,7 +272,7 @@ const BackupManager: React.FC = () => {
         throw new Error(errorData.message || 'Error guardando token');
       }
     } catch (error) {
-      alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setConfiguringDrive(false);
     }

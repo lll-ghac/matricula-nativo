@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserPlus, Edit, Trash2, Lock, Save, X, Search, Upload, FileText, Download, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface UserData {
   id: number;
@@ -18,6 +20,8 @@ interface ImportResult {
 }
 
 const UserManagement: React.FC = () => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -179,7 +183,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!window.confirm('¿Estás seguro de que quieres desactivar este usuario?')) {
+    if (!(await confirm('¿Estás seguro de que quieres desactivar este usuario?'))) {
       return;
     }
 
@@ -192,16 +196,16 @@ const UserManagement: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || 'Error al desactivar usuario.');
+        toast.error(data.message || 'Error al desactivar usuario.');
         return;
       }
 
-      alert('Usuario desactivado exitosamente!');
+      toast.success('Usuario desactivado exitosamente!');
       fetchUsers();
 
     } catch (err: any) {
       console.error('Error al desactivar usuario:', err);
-      alert('Error de red o del servidor al desactivar usuario.');
+      toast.error('Error de red o del servidor al desactivar usuario.');
     }
   };
 
@@ -267,13 +271,13 @@ const UserManagement: React.FC = () => {
       if (selectedFile.type === 'text/csv' || selectedFile.name.toLowerCase().endsWith('.csv')) {
         // Additional file size check (5MB limit)
         if (selectedFile.size > 5 * 1024 * 1024) {
-          alert('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
+          toast.error('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
           return;
         }
         setImportFile(selectedFile);
         setImportResult(null);
       } else {
-        alert('Por favor seleccione un archivo CSV válido (.csv).\n\nFormato requerido:\n• Archivo con extensión .csv\n• Separado por comas\n• Codificación UTF-8');
+        toast.error('Por favor seleccione un archivo CSV válido (.csv).\n\nFormato requerido:\n• Archivo con extensión .csv\n• Separado por comas\n• Codificación UTF-8');
       }
     }
   };
@@ -297,13 +301,13 @@ const UserManagement: React.FC = () => {
       if (droppedFile.type === 'text/csv' || droppedFile.name.toLowerCase().endsWith('.csv')) {
         // Additional file size check (5MB limit)
         if (droppedFile.size > 5 * 1024 * 1024) {
-          alert('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
+          toast.error('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
           return;
         }
         setImportFile(droppedFile);
         setImportResult(null);
       } else {
-        alert('Por favor seleccione un archivo CSV válido (.csv).\n\nFormato requerido:\n• Archivo con extensión .csv\n• Separado por comas\n• Codificación UTF-8');
+        toast.error('Por favor seleccione un archivo CSV válido (.csv).\n\nFormato requerido:\n• Archivo con extensión .csv\n• Separado por comas\n• Codificación UTF-8');
       }
     }
   };
@@ -375,7 +379,7 @@ const UserManagement: React.FC = () => {
           errorMessage = data.message;
         }
         
-        alert(`Error al importar usuarios:\n\n${errorMessage}`);
+        toast.error(`Error al importar usuarios:\n\n${errorMessage}`);
       }
     } catch (error) {
       console.error('Error importing users:', error);
@@ -396,7 +400,7 @@ const UserManagement: React.FC = () => {
         errorMessage = `Error de red: ${error.message}`;
       }
       
-      alert(`Error al importar usuarios:\n\n${errorMessage}\n\nDetalles técnicos:\n• Error: ${error instanceof Error ? error.name : 'Unknown'}\n• Mensaje: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Error al importar usuarios:\n\n${errorMessage}\n\nDetalles técnicos:\n• Error: ${error instanceof Error ? error.name : 'Unknown'}\n• Mensaje: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsUploading(false);
     }
@@ -451,7 +455,7 @@ const UserManagement: React.FC = () => {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error al exportar usuarios:', error);
-      alert('Error al exportar usuarios. Por favor, inténtelo de nuevo.');
+      toast.error('Error al exportar usuarios. Por favor, inténtelo de nuevo.');
     }
   };
 

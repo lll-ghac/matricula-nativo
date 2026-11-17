@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, AlertCircle } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 interface Course {
   id?: number;
@@ -37,6 +38,7 @@ const CourseFormModal: React.FC<CourseFormModalProps> = ({
   onSuccess,
   onClose
 }) => {
+  const toast = useToast();
   const isEditing = !!course;
 
   const [formData, setFormData] = useState<Course>({
@@ -186,19 +188,19 @@ const CourseFormModal: React.FC<CourseFormModalProps> = ({
 
       if (response.ok) {
         const result = await response.json();
-        alert(isEditing ? 'Curso actualizado exitosamente' : `Curso ${result.data.codigo} creado exitosamente`);
+        toast.success(isEditing ? 'Curso actualizado exitosamente' : `Curso ${result.data.codigo} creado exitosamente`);
         onSuccess();
       } else {
         const error = await response.json();
         if (response.status === 409) {
-          alert(`Ya existe un curso con la misma combinación de grado, letra y año.\nCurso existente: ${error.existing_course?.codigo || 'N/A'}`);
+          toast.error(`Ya existe un curso con la misma combinación de grado, letra y año.\nCurso existente: ${error.existing_course?.codigo || 'N/A'}`);
         } else {
-          alert(`Error: ${error.error || 'No se pudo guardar el curso'}\n${error.details || ''}`);
+          toast.error(`Error: ${error.error || 'No se pudo guardar el curso'}\n${error.details || ''}`);
         }
       }
     } catch (error) {
       console.error('Error guardando curso:', error);
-      alert('Error al guardar el curso. Por favor, intente nuevamente.');
+      toast.error('Error al guardar el curso. Por favor, intente nuevamente.');
     } finally {
       setSaving(false);
     }

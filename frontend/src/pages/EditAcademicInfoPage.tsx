@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, BookOpen, AlertCircle } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 interface Student {
   id: number;
@@ -39,6 +40,7 @@ interface EditAcademicInfoPageProps {
 }
 
 const EditAcademicInfoPage: React.FC<EditAcademicInfoPageProps> = ({ studentId, onBack, onUpdate }) => {
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
@@ -73,7 +75,7 @@ const EditAcademicInfoPage: React.FC<EditAcademicInfoPageProps> = ({ studentId, 
 
     } catch (error) {
       console.error('❌ Error al cargar datos:', error);
-      alert('Error al cargar los datos del estudiante');
+      toast.error('Error al cargar los datos del estudiante');
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +128,7 @@ const EditAcademicInfoPage: React.FC<EditAcademicInfoPageProps> = ({ studentId, 
 
     } catch (error) {
       console.error('❌ Error al guardar:', error);
-      alert('Error al guardar los datos: ' + (error as Error).message);
+      toast.error('Error al guardar los datos: ' + (error as Error).message);
     } finally {
       setIsSaving(false);
     }

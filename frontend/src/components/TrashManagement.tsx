@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Trash2, RotateCcw, X } from 'lucide-react';
+import { useConfirm } from '../context/ConfirmContext';
 
 const TrashManagement: React.FC = () => {
+  const confirm = useConfirm();
   const [deletedStudents] = useState([
     // Mock data
     {
@@ -16,7 +18,7 @@ const TrashManagement: React.FC = () => {
   ]);
 
   const handleRestore = async (studentId: number) => {
-    if (!window.confirm('¿Está seguro de que desea restaurar este estudiante?')) {
+    if (!(await confirm('¿Está seguro de que desea restaurar este estudiante?'))) {
       return;
     }
     
@@ -29,7 +31,7 @@ const TrashManagement: React.FC = () => {
   };
 
   const handlePermanentDelete = async (studentId: number) => {
-    if (!window.confirm('¿Está seguro de que desea eliminar PERMANENTEMENTE este estudiante? Esta acción no se puede deshacer.')) {
+    if (!(await confirm('¿Está seguro de que desea eliminar PERMANENTEMENTE este estudiante? Esta acción no se puede deshacer.'))) {
       return;
     }
     

@@ -7,6 +7,7 @@ import NEEForm from './NEEForm';
 import ObservationsForm from './ObservationsForm';
 import PDFReceipt from './PDFReceipt';
 import type { StudentData, ApoderadoData } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface StudentFormProps {
   student?: Partial<StudentData>;
@@ -31,6 +32,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   isProfesorJefe = false,
   cursoAsignado = null
 }) => {
+  const toast = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [showReceipt, setShowReceipt] = useState(false);
   const [savedStudentData, setSavedStudentData] = useState<StudentData | null>(null);
@@ -197,7 +199,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
     } catch (error: any) {
       console.error('❌ Error en handleSaveStudent:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }

@@ -3,12 +3,14 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import PDFReceipt from '../components/PDFReceipt';
 import GuardianReceipt from '../components/GuardianReceipt';
 import TextOnlyReceipt from '../components/TextOnlyReceipt';
+import { useToast } from '../context/ToastContext';
 
 interface ReceiptPageProps {
   studentId: string;
 }
 
 const ReceiptPage: React.FC<ReceiptPageProps> = ({ studentId }) => {
+  const toast = useToast();
   const [studentData, setStudentData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -144,7 +146,7 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ studentId }) => {
 
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
-      alert('Por favor, permite las ventanas emergentes para imprimir');
+      toast.error('Por favor, permite las ventanas emergentes para imprimir');
       return;
     }
 
@@ -184,7 +186,7 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ studentId }) => {
 
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
-      alert('Por favor, permite las ventanas emergentes para imprimir');
+      toast.error('Por favor, permite las ventanas emergentes para imprimir');
       return;
     }
 

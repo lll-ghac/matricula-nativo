@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DualGuardianForm from '../components/DualGuardianForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import type { ApoderadoData } from '../types';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface EditGuardiansPageProps {
   studentId: string;
@@ -9,6 +10,7 @@ interface EditGuardiansPageProps {
 }
 
 const EditGuardiansPage: React.FC<EditGuardiansPageProps> = ({ studentId, onBack }) => {
+  const confirm = useConfirm();
   const [principalGuardian, setPrincipalGuardian] = useState<ApoderadoData | null>(null);
   const [suplenteGuardian, setSuplenteGuardian]   = useState<ApoderadoData | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -134,11 +136,11 @@ const EditGuardiansPage: React.FC<EditGuardiansPageProps> = ({ studentId, onBack
         const nombre = [found.nombre, found.apellido_paterno, found.apellido_materno]
           .filter(Boolean).join(' ');
         const label = type === 'principal' ? 'principal' : 'suplente';
-        const confirmed = window.confirm(
+        const confirmed = (await confirm(
           `Se encontró a ${nombre} en el sistema.\n\n` +
           `¿Desea reemplazar al apoderado ${label} actual por esta persona?\n\n` +
           `El apoderado anterior no será eliminado de la base de datos.`
-        );
+        ));
         if (!confirmed) return undefined; // usuario canceló — no tocar el formulario
       }
 

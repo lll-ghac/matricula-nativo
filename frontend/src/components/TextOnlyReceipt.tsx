@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { StudentData, ApoderadoData } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface TextOnlyReceiptProps {
   studentData: StudentData;
@@ -7,6 +8,7 @@ interface TextOnlyReceiptProps {
 }
 
 const TextOnlyReceipt: React.FC<TextOnlyReceiptProps> = ({ studentData, apoderados }) => {
+  const toast = useToast();
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
 
   // Fetch current year from backend
@@ -189,7 +191,7 @@ Escuela República del Ecuador • RBD: 312 • Bellavista 3957, Antofagasta
   const handleCopyToClipboard = () => {
     const text = generateTextReceipt();
     navigator.clipboard.writeText(text).then(() => {
-      alert('Comprobante copiado al portapapeles');
+      toast.success('Comprobante copiado al portapapeles');
     }).catch(() => {
       const textArea = document.createElement('textarea');
       textArea.value = text;
@@ -197,7 +199,7 @@ Escuela República del Ecuador • RBD: 312 • Bellavista 3957, Antofagasta
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Comprobante copiado al portapapeles');
+      toast.success('Comprobante copiado al portapapeles');
     });
   };
 

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { calculateDV } from '../utils/rutUtils';
 import { nacionalidades } from '../utils/chilean-data';
 import { convertToISO, convertFromISO } from '../utils/dateUtils';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface Guardian {
   id?: number;
@@ -42,6 +44,8 @@ interface GuardiansPageProps {
 }
 
 const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [filteredGuardians, setFilteredGuardians] = useState<Guardian[]>([]);
   const [loading, setLoading] = useState(false);
@@ -97,7 +101,7 @@ const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
       }
     } catch (error) {
       console.error('Error cargando apoderados:', error);
-      alert('Error al cargar la lista de apoderados');
+      toast.error('Error al cargar la lista de apoderados');
     } finally {
       setLoading(false);
     }
@@ -147,7 +151,7 @@ const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
   };
 
   const handleDelete = async (guardian: Guardian) => {
-    if (!confirm(`¿Está seguro de eliminar al apoderado ${guardian.nombre} ${guardian.apellido_paterno}?`)) {
+    if (!(await confirm(`¿Está seguro de eliminar al apoderado ${guardian.nombre} ${guardian.apellido_paterno}?`))) {
       return;
     }
 
@@ -158,15 +162,15 @@ const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
       });
 
       if (response.ok) {
-        alert('Apoderado eliminado exitosamente');
+        toast.success('Apoderado eliminado exitosamente');
         loadGuardians();
       } else {
         const error = await response.json();
-        alert(error.message || 'Error al eliminar apoderado');
+        toast.error(error.message || 'Error al eliminar apoderado');
       }
     } catch (error) {
       console.error('Error eliminando apoderado:', error);
-      alert('Error al eliminar apoderado');
+      toast.error('Error al eliminar apoderado');
     }
   };
 
@@ -175,42 +179,42 @@ const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
 
     // Validaciones
     if (!formData.nombre || !formData.apellido_paterno || !formData.apellido_materno) {
-      alert('Complete los campos obligatorios: Nombre, Apellidos');
+      toast.error('Complete los campos obligatorios: Nombre, Apellidos');
       return;
     }
 
     if (formData.tipo_documento === 'RUT' && (!formData.rut || !formData.dv)) {
-      alert('El RUT es obligatorio');
+      toast.error('El RUT es obligatorio');
       return;
     }
 
     if (formData.tipo_documento === 'DNI' && !formData.dni) {
-      alert('El DNI es obligatorio');
+      toast.error('El DNI es obligatorio');
       return;
     }
 
     if (formData.tipo_documento === 'Pasaporte' && !formData.pasaporte) {
-      alert('El Pasaporte es obligatorio');
+      toast.error('El Pasaporte es obligatorio');
       return;
     }
 
     if (!formData.fecha_nacimiento || (typeof formData.fecha_nacimiento === 'string' && formData.fecha_nacimiento.trim() === '')) {
-      alert('La fecha de nacimiento es obligatoria');
+      toast.error('La fecha de nacimiento es obligatoria');
       return;
     }
 
     if (!formData.genero) {
-      alert('El género es obligatorio');
+      toast.error('El género es obligatorio');
       return;
     }
 
     if (!formData.direccion) {
-      alert('Complete el campo de dirección');
+      toast.error('Complete el campo de dirección');
       return;
     }
 
     if (!formData.celular) {
-      alert('El celular es obligatorio');
+      toast.error('El celular es obligatorio');
       return;
     }
 
@@ -240,7 +244,7 @@ const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
         if (isoDate && isoDate.trim() !== '') {
           dataToSend.fecha_nacimiento = isoDate;
         } else {
-          alert('Error al procesar la fecha de nacimiento');
+          toast.error('Error al procesar la fecha de nacimiento');
           return;
         }
       }
@@ -253,16 +257,16 @@ const GuardiansPage: React.FC<GuardiansPageProps> = ({ userRole }) => {
       });
 
       if (response.ok) {
-        alert(editingGuardian ? 'Apoderado actualizado exitosamente' : 'Apoderado creado exitosamente');
+        toast.success(editingGuardian ? 'Apoderado actualizado exitosamente' : 'Apoderado creado exitosamente');
         setShowForm(false);
         loadGuardians();
       } else {
         const error = await response.json();
-        alert(error.message || 'Error al guardar apoderado');
+        toast.error(error.message || 'Error al guardar apoderado');
       }
     } catch (error) {
       console.error('Error guardando apoderado:', error);
-      alert('Error al guardar apoderado');
+      toast.error('Error al guardar apoderado');
     }
   };
 
