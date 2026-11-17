@@ -270,10 +270,16 @@ async function createStudent(req, res) {
 
     const alumnoData = prepareAlumnoPrismaData(alumnoNormalizado);
 
+    // Si el RUT ya existe en el año vigente (p. ej. un alumno eliminado que se rematricula),
+    // se reutiliza la fila: se conserva quién lo creó originalmente y se limpia el motivo
+    // de eliminación anterior, porque el alumno vuelve a estar activo.
+    // eslint-disable-next-line no-unused-vars
+    const { creado_por: _creadoPorOriginal, ...alumnoDataUpdate } = alumnoData;
+
     const nuevoAlumno = await prisma.alumnos.upsert({
       where: { rut_anio_matricula: { rut: alumnoData.rut, anio_matricula: alumnoData.anio_matricula } },
       create: alumnoData,
-      update: alumnoData
+      update: { ...alumnoDataUpdate, motivo_eliminacion: null }
     });
 
     const studentId = nuevoAlumno.id;
