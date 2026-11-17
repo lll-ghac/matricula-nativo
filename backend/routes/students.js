@@ -17,6 +17,11 @@ const APODERADO_PRISMA_FIELDS = [
   'nivel_educacional', 'situacion_laboral', 'lugar_trabajo'
 ];
 
+// Columnas de `alumnos` que se pueden escribir desde crear/editar (id y fechas de auditoría las maneja la BD).
+const COLUMNAS_ALUMNO_ESCRIBIBLES = new Set(
+  Object.keys(Prisma.AlumnosScalarFieldEnum).filter(c => !['id', 'fecha_creacion', 'fecha_modificacion'].includes(c))
+);
+
 // Autorización anual de uso de imagen (Ley 21.430 / 21.719). NULL = sin responder.
 const CAMPOS_AUTORIZACION_IMAGEN = ['autoriza_imagen_pedagogico', 'autoriza_imagen_redes', 'autoriza_imagen_prensa'];
 // Campos de control que solo escribe el servidor (nunca se aceptan desde el cliente).
@@ -44,6 +49,12 @@ function prepareAlumnoPrismaData(data) {
   if (d.curso_id !== undefined) d.curso_id = d.curso_id ? parseInt(d.curso_id) : null;
   if (d.creado_por !== undefined) d.creado_por = d.creado_por ? BigInt(d.creado_por) : null;
   if (d.modificado_por !== undefined) d.modificado_por = d.modificado_por ? BigInt(d.modificado_por) : null;
+  // Solo columnas reales de `alumnos`. El modal de edición reenvía el alumno tal como lo recibió
+  // (con `previsiones_salud` como objeto, `prevision_salud`, `creado_en`, `id`…); un objeto de
+  // relación hace que Prisma rechace `prevision_salud_id` ("Unknown argument") → 500.
+  Object.keys(d).forEach(k => {
+    if (!COLUMNAS_ALUMNO_ESCRIBIBLES.has(k)) delete d[k];
+  });
   return d;
 }
 

@@ -24,12 +24,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+    // `.light` explícito anula la preferencia oscura del sistema (ver index.css).
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme !== 'dark');
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (e) {
+      console.warn('No se pudo guardar la preferencia de tema:', e);
     }
   }, [theme]);
 

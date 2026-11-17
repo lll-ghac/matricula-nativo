@@ -54,9 +54,11 @@
   --radius-xl: 20px;
 }
 
-/* Dark mode */
+/* Dark mode por preferencia del sistema, SALVO que el usuario haya elegido modo claro
+   (ThemeContext pone la clase .light en <html>). Sin el :not(.light), en un equipo con el
+   sistema en oscuro el botón de tema no tenía ningún efecto visual. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --color-background: #000000;
     --color-foreground: #FFFFFF;
     --color-card: #1C1C1E;
