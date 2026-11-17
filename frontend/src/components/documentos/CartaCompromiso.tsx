@@ -1,6 +1,7 @@
 import React from 'react';
 import type { StudentData } from '../../types';
 import { ESTABLECIMIENTO } from '../../config/establecimiento';
+import EncabezadoDocumento from './EncabezadoDocumento';
 import {
   estilos, nombreCompletoAlumno, nombreCompletoApoderado, apoderadoPrincipal,
   cursoTexto, rutApoderado, datoOLinea,
@@ -60,8 +61,7 @@ const CartaCompromiso: React.FC<CartaCompromisoProps> = ({ student, currentYear 
 
   return (
     <div style={estilos.hoja} data-documento="carta-compromiso">
-      <h1 style={estilos.titulo}>Carta de Compromiso del Apoderado/a</h1>
-      <p style={estilos.subtitulo}>{ESTABLECIMIENTO.nombre} · RBD {ESTABLECIMIENTO.rbd} · Año escolar {currentYear}</p>
+      <EncabezadoDocumento titulo="Carta de Compromiso del Apoderado/a" subtitulo={`Año escolar ${currentYear}`} />
 
       <p style={estilos.parrafo}>
         Yo, <span style={estilos.dato}>{datoOLinea(nombreApoderado, 40)}</span>, RUT:{' '}

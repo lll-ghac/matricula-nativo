@@ -26,6 +26,8 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
   const [currentYear, setCurrentYear] = useState<number>(propCurrentYear || new Date().getFullYear());
   const [guardianPrintFn, setGuardianPrintFn] = useState<(() => void) | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
+  // Documento que se muestra en pantalla para revisarlo antes de imprimir.
+  const [vista, setVista] = useState<'ficha' | 'comprobante' | 'compromiso' | 'autorizacion'>('ficha');
   const guardianRef = useRef<HTMLDivElement>(null);
   const compromisoRef = useRef<HTMLDivElement>(null);
   const autorizacionRef = useRef<HTMLDivElement>(null);
@@ -332,6 +334,40 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
       `}</style>
 
 
+      {/* Vista previa: revisar cualquiera de los 4 documentos antes de imprimir */}
+      <div className="no-print mb-4 flex flex-col items-center gap-2">
+        <div className="flex flex-wrap justify-center gap-2" role="tablist" aria-label="Vista previa de documentos">
+          {([
+            { id: 'ficha', texto: 'Ficha de Matrícula' },
+            { id: 'comprobante', texto: 'Comprobante Apoderado' },
+            { id: 'compromiso', texto: 'Carta de Compromiso' },
+            { id: 'autorizacion', texto: 'Autorización de Imagen' },
+          ] as const).map(t => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={vista === t.id}
+              onClick={() => setVista(t.id)}
+              data-testid={`vista-${t.id}`}
+              className="px-4 py-2 rounded-full text-sm font-medium border"
+              style={{
+                backgroundColor: vista === t.id ? 'var(--color-primary)' : 'transparent',
+                color: vista === t.id ? '#fff' : 'var(--color-text)',
+                borderColor: 'var(--color-primary)'
+              }}
+            >
+              {t.texto}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs" style={{ color: 'var(--color-text-secondary, #6b7280)' }}>
+          Vista previa: revise los datos antes de imprimir. El pie de página (usuario, fecha y hora) se agrega al imprimir.
+        </p>
+      </div>
+
+      {/* Ficha de matrícula (siempre montada: se usa para imprimir aunque no esté a la vista) */}
+      <div style={{ display: vista === 'ficha' ? 'block' : 'none' }}>
       {/* Hidden Receipt for PDF Generation */}
       <div
         ref={receiptRef}
@@ -640,6 +676,20 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
           </p>
         </div>
       </div>
+
+      </div>
+
+      {vista !== 'ficha' && (
+        <div
+          className="bg-white"
+          data-testid={`vista-previa-${vista}`}
+          style={{ width: '216mm', maxWidth: '100%', minHeight: '279mm', padding: '15mm', margin: '0 auto', boxShadow: '0 0 10px rgba(0,0,0,0.1)', color: '#000', overflowX: 'auto' }}
+        >
+          {vista === 'comprobante' && <GuardianReceipt student={student} currentYear={currentYear} />}
+          {vista === 'compromiso' && <CartaCompromiso student={student} currentYear={currentYear} />}
+          {vista === 'autorizacion' && <AutorizacionImagen student={student} currentYear={currentYear} />}
+        </div>
+      )}
 
       {/* Guardian Receipt - Hidden, only for printing */}
       <div style={{ display: 'none' }}>
