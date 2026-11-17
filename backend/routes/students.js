@@ -418,6 +418,11 @@ async function updateStudent(req, res) {
     // Don't update rut/anio_matricula on update (unique key)
     delete alumnoData.rut;
     delete alumnoData.anio_matricula;
+    // El creador original nunca cambia al editar. Y como esta ruta deja al alumno
+    // activo (eliminado: false), también es la vía de rematrícula desde el formulario:
+    // se limpia el motivo de una eliminación anterior (aunque el formulario lo reenvíe).
+    delete alumnoData.creado_por;
+    alumnoData.motivo_eliminacion = null;
 
     const result = await prisma.alumnos.updateMany({
       where: { id: BigInt(id) },
