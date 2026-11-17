@@ -134,7 +134,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', origin);
   }
   
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   
@@ -225,6 +225,7 @@ app.get('/api/students/:id', authenticateToken, authorizeRole(['profesor', 'insp
 app.put('/api/students/:id', authenticateToken, authorizeRole(['profesor', 'inspector', 'administrador']), students.updateStudent);
 app.delete('/api/students/:id', authenticateToken, authorizeRole(['administrador', 'inspector']), students.deleteStudent);
 app.put('/api/students/:id/retire', authenticateToken, authorizeRole(['administrador', 'inspector']), students.retireStudent);
+app.patch('/api/students/:id/documentos-impresos', authenticateToken, authorizeRole(['profesor', 'inspector', 'administrador']), students.markDocumentsPrinted);
 app.get('/api/student/check/:rut', authenticateToken, authorizeRole(['profesor', 'inspector', 'administrador']), students.checkStudentByRut);
 
 

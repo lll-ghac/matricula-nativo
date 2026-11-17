@@ -151,6 +151,15 @@ export interface StudentData {
   situacion_laboral_asociado?: string;
   trabaja_principalmente_asociado?: string; // "En el hogar" | "Fuera del hogar"
 
+  // Autorización anual de uso de imagen (null = sin responder) y control de la carta física
+  autoriza_imagen_pedagogico?: boolean | null;
+  autoriza_imagen_redes?: boolean | null;
+  autoriza_imagen_prensa?: boolean | null;
+  documentos_impresos_en?: string | null;
+  carta_imagen_archivada?: boolean;
+  carta_imagen_archivada_por?: number | string | null;
+  carta_imagen_archivada_en?: string | null;
+
   // Índice dinámico para campos adicionales
   [key: string]: any;
 }

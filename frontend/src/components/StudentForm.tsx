@@ -5,6 +5,7 @@ import AcademicInfoForm from './AcademicInfoForm';
 import ProgramsAndBenefitsForm from './ProgramsAndBenefitsForm';
 import NEEForm from './NEEForm';
 import ObservationsForm from './ObservationsForm';
+import AutorizacionImagenForm, { AUTORIZACIONES_IMAGEN } from './AutorizacionImagenForm';
 import PDFReceipt from './PDFReceipt';
 import type { StudentData, ApoderadoData } from '../types';
 import { useToast } from '../context/ToastContext';
@@ -38,6 +39,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const [savedStudentData, setSavedStudentData] = useState<StudentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
+  // true en matrícula nueva o rematrícula: hay que preguntar y registrar la autorización de imagen.
+  const [requiereAutorizacion, setRequiereAutorizacion] = useState(true);
 
   const [studentData, setStudentData] = useState<Partial<StudentData>>({});
 
@@ -46,6 +49,27 @@ const StudentForm: React.FC<StudentFormProps> = ({
       ...(initialStudentData || {}),
       estado: initialStudentData?.estado || 'matriculado',
     };
+
+    // Precarga desde un año anterior: es una matrícula NUEVA para el año vigente. Se quita el id
+    // (si no, el formulario haría PUT sobre la fila del año pasado) y los datos propios de esa
+    // fila, incluido el curso, que es por año académico.
+    const anioPrecarga = (initialData as any).anio_matricula;
+    const esPrecargaAnioAnterior = !!initialData.id && anioPrecarga != null
+      && Number(anioPrecarga) !== Number(currentYear);
+    if (esPrecargaAnioAnterior) {
+      ['id', 'anio_matricula', 'fecha_creacion', 'fecha_modificacion', 'creado_en', 'creado_por', 'modificado_por',
+        'eliminado', 'motivo_eliminacion', 'fecha_retiro', 'observacion_retiro', 'curso_id', 'curso_base', 'letra']
+        .forEach(campo => { delete (initialData as any)[campo]; });
+      initialData.estado = 'matriculado';
+    }
+
+    // Matrícula nueva o rematrícula de un eliminado: la autorización de imagen se renueva cada año,
+    // así que parte sin responder para obligar a preguntarle al apoderado.
+    const esMatricula = !initialData.id || (initialData as any).eliminado === true;
+    if (esMatricula) {
+      AUTORIZACIONES_IMAGEN.forEach(({ campo }) => { (initialData as any)[campo] = null; });
+    }
+    setRequiereAutorizacion(esMatricula);
 
     if (!initialData.apoderados || initialData.apoderados.length < 2) {
       const apoderados = initialData.apoderados || [];
@@ -80,7 +104,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
       initialData.curso_base = nameParts.join(' ');
     }
     setStudentData(initialData);
-  }, [initialStudentData, isProfesorJefe, cursoAsignado]);
+  }, [initialStudentData, isProfesorJefe, cursoAsignado, currentYear]);
 
   const handleStudentChange = (field: keyof StudentData, value: any) => {
     if (field === 'nees') {
@@ -151,6 +175,12 @@ const StudentForm: React.FC<StudentFormProps> = ({
   };
 
   const handleSaveStudent = async () => {
+    const autorizacionesPendientes = getMissingFieldsByStep(6);
+    if (autorizacionesPendientes.length > 0) {
+      toast.error('Falta registrar la autorización de uso de imagen (paso 6).');
+      setCurrentStep(6);
+      return;
+    }
     setLoading(true);
     try {
       // Transferir datos de persona asociada al apoderado principal
@@ -206,6 +236,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
   };
 
   const nextStep = () => {
+    if (currentStep === 6 && getMissingFieldsByStep(6).length > 0) {
+      setValidationError('Debe registrar las 3 respuestas de autorización de uso de imagen (sí o no) antes de continuar.');
+      return;
+    }
     if (currentStep === 1) {
       // Validation logic can be added here
     }
@@ -275,9 +309,15 @@ const StudentForm: React.FC<StudentFormProps> = ({
       if (!studentData.curso_id && (!studentData.curso_base || !studentData.letra)) {
         missing.push('Curso');
       }
+    } else if (step === 6 && requiereAutorizacion) {
+      // Paso 6: Autorización de uso de imagen (obligatoria en matrícula/rematrícula)
+      AUTORIZACIONES_IMAGEN.forEach(({ campo, letra, titulo }) => {
+        if (studentData[campo] !== true && studentData[campo] !== false) {
+          missing.push(`Autorización ${letra}: ${titulo}`);
+        }
+      });
     }
-    // Paso 4, 5, 6 no tienen campos obligatorios
-
+    // Pasos 4, 5 y 7 no tienen campos obligatorios
     return missing;
   };
 
@@ -317,7 +357,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   return (
     <div className="max-w-5xl mx-auto p-6 ios-card mt-6">
       <div className="text-center mb-6">
-        <h2 className="ios-title-large">Formulario de Matrícula - Paso {currentStep} de 6</h2>
+        <h2 className="ios-title-large">Formulario de Matrícula - Paso {currentStep} de 7</h2>
       </div>
 
       {validationError && (
@@ -355,7 +395,15 @@ const StudentForm: React.FC<StudentFormProps> = ({
           }}
         />
       )}
-      {currentStep === 6 && <ObservationsForm observations={studentData} onObservationsChange={handleStudentChange} onSaveStudent={handleSaveStudent} loading={loading} />}
+      {currentStep === 6 && (
+        <AutorizacionImagenForm
+          data={studentData}
+          onChange={(campo, valor) => { setValidationError(''); handleStudentChange(campo, valor); }}
+          currentYear={currentYear}
+          obligatorio={requiereAutorizacion}
+        />
+      )}
+      {currentStep === 7 && <ObservationsForm observations={studentData} onObservationsChange={handleStudentChange} onSaveStudent={handleSaveStudent} loading={loading} />}
 
       {/* Indicador visual de campos faltantes */}
       {missingFields.length > 0 && (
@@ -381,7 +429,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
                   </li>
                 ))}
               </ul>
-              {currentStep < 6 && (
+              {currentStep < 7 && (
                 <p className="text-xs mt-3 italic" style={{ color: '#856404' }}>
                   Puede continuar al siguiente paso, pero recuerde completar estos campos antes del paso final.
                 </p>
@@ -392,7 +440,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
       )}
 
       {/* Indicador de paso completo */}
-      {missingFields.length === 0 && currentStep <= 3 && (
+      {missingFields.length === 0 && (currentStep <= 3 || (currentStep === 6 && requiereAutorizacion)) && (
         <div className="mt-8 p-4 rounded-lg" style={{
           backgroundColor: '#d4edda',
           border: '2px solid #28a745',
@@ -414,7 +462,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
       <div className="mt-10 flex justify-between">
         {currentStep > 1 && <button type="button" onClick={prevStep} className="ios-btn ios-btn-secondary">Atrás</button>}
-        {currentStep < 6 && <button type="button" onClick={nextStep} className="ios-btn ios-btn-primary ml-auto">Siguiente</button>}
+        {currentStep < 7 && <button type="button" onClick={nextStep} className="ios-btn ios-btn-primary ml-auto">Siguiente</button>}
       </div>
     </div>
   );

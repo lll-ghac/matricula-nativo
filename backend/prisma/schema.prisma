@@ -80,6 +80,13 @@ model alumnos {
   fecha_modificacion         DateTime?               @default(now()) @db.Timestamptz(6)
   eliminado                  Boolean?                @default(false)
   motivo_eliminacion         String?
+  autoriza_imagen_pedagogico Boolean?
+  autoriza_imagen_redes      Boolean?
+  autoriza_imagen_prensa     Boolean?
+  documentos_impresos_en     DateTime?               @db.Timestamptz(6)
+  carta_imagen_archivada     Boolean                 @default(false)
+  carta_imagen_archivada_por BigInt?
+  carta_imagen_archivada_en  DateTime?               @db.Timestamptz(6)
   observaciones              String?
   observaciones_matriculador String?
   nombre_completo_busqueda   String?

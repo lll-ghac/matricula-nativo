@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Download, Home, X } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import GuardianReceipt from './GuardianReceipt';
+import CartaCompromiso from './documentos/CartaCompromiso';
+import AutorizacionImagen from './documentos/AutorizacionImagen';
 import type { StudentData, ApoderadoData } from '../types';
 import { useToast } from '../context/ToastContext';
 
@@ -24,6 +26,9 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
   const [currentYear, setCurrentYear] = useState<number>(propCurrentYear || new Date().getFullYear());
   const [guardianPrintFn, setGuardianPrintFn] = useState<(() => void) | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const guardianRef = useRef<HTMLDivElement>(null);
+  const compromisoRef = useRef<HTMLDivElement>(null);
+  const autorizacionRef = useRef<HTMLDivElement>(null);
 
   const allGuardians = student.apoderados || [];
   const apoderadoPrincipal = allGuardians.find(a => a.es_principal === true);
@@ -137,117 +142,106 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
     );
   }
 
-  const printSchoolReceipt = () => {
-    const receiptElement = receiptRef.current;
-    if (!receiptElement) return;
+  type DocumentoImprimible = 'ficha' | 'comprobante' | 'compromiso' | 'autorizacion';
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
+  const TITULOS_DOCUMENTO: Record<DocumentoImprimible, string> = {
+    ficha: 'Ficha de Matrícula',
+    comprobante: 'Comprobante Apoderado',
+    compromiso: 'Carta de Compromiso',
+    autorizacion: 'Autorización de Uso de Imagen',
+  };
+
+  const htmlDocumento = (doc: DocumentoImprimible): string | null => {
+    const contenedor = {
+      ficha: receiptRef.current,
+      comprobante: guardianRef.current,
+      compromiso: compromisoRef.current,
+      autorizacion: autorizacionRef.current,
+    }[doc];
+    return contenedor ? contenedor.innerHTML : null;
+  };
+
+  // Texto seguro para `content: "..."` de CSS.
+  const textoCss = (texto: string) => texto.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
+
+  // Imprime uno o varios documentos en una sola ventana, cada uno en hoja nueva, con pie de
+  // trazabilidad en cada página. La ventana se abre ANTES de cualquier await (si no, el navegador
+  // la bloquea por no venir directo del clic).
+  const imprimirDocumentos = async (docs: DocumentoImprimible[]) => {
+    const ventana = window.open('', '_blank', 'width=800,height=600');
+    if (!ventana) {
       toast.error('Por favor, permite las ventanas emergentes para imprimir');
       return;
     }
+    ventana.document.write('<p style="font-family:sans-serif;padding:24px">Preparando documentos…</p>');
 
-    const receiptContent = receiptElement.innerHTML;
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Ficha de Matrícula - ${student.nombres} ${student.apellido_paterno}</title>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-          <style>
-            @media print {
-              @page {
-                size: letter;
-                margin: 15mm;
-              }
-              body {
-                margin: 0;
-                padding: 0;
-              }
-            }
-            * {
-              box-sizing: border-box;
-            }
-            body {
-              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-              margin: 0;
-              padding: 0;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-              background: white;
-            }
-            img {
-              display: block;
-            }
-            .section-line {
-              width: 4px;
-              height: 20px;
-              background-color: #000000;
-              border-radius: 2px;
-            }
-          </style>
-        </head>
-        <body>
-          ${receiptContent}
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
-  const printBothReceipts = () => {
-    const schoolReceiptElement = receiptRef.current;
-    const guardianReceiptElement = document.querySelector('[data-guardian-receipt]') as HTMLElement;
-
-    if (!schoolReceiptElement || !guardianReceiptElement) {
+    const secciones = docs.map(htmlDocumento);
+    if (secciones.some(html => !html)) {
+      ventana.close();
       toast.error('No se pudieron cargar los documentos para imprimir');
       return;
     }
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-      toast.error('Por favor, permite las ventanas emergentes para imprimir');
-      return;
+    let usuario = '';
+    try {
+      const r = await fetch('/api/auth/validate-token', { credentials: 'include' });
+      if (r.ok) {
+        const j = await r.json();
+        usuario = j.user?.nombre || j.user?.username || '';
+      }
+    } catch (e) {
+      console.error('No se pudo obtener el usuario para el pie de página:', e);
     }
 
-    const schoolContent = schoolReceiptElement.innerHTML;
-    const guardianContent = guardianReceiptElement.innerHTML;
+    if (docs.includes('autorizacion') && student.id) {
+      try {
+        await fetch(`/api/students/${student.id}/documentos-impresos`, { method: 'PATCH', credentials: 'include' });
+      } catch (e) {
+        console.error('No se pudo registrar la impresión de la autorización:', e);
+      }
+    }
 
-    printWindow.document.write(`
+    const ahora = new Date();
+    const fechaHora = `${ahora.toLocaleDateString('es-CL')} ${ahora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`;
+    const pie = [
+      [student.nombres, student.apellido_paterno, student.apellido_materno].filter(Boolean).join(' '),
+      `RUN ${formatRut(student.rut, student.dv)}`,
+      `Curso ${[student.curso_base, student.letra].filter(Boolean).join(' ') || '—'}`,
+      `Año escolar ${currentYear}`,
+      `Matrícula ID ${student.id ?? '—'}`,
+      `Impreso ${fechaHora}${usuario ? ` por ${usuario}` : ''}`,
+    ].join(' · ');
+
+    const titulo = docs.length === 1
+      ? `${TITULOS_DOCUMENTO[docs[0]]} - ${student.nombres} ${student.apellido_paterno}`
+      : `Documentos de Matrícula - ${student.nombres} ${student.apellido_paterno}`;
+
+    const cuerpo = secciones
+      .map((html, i) => `<div class="documento${i > 0 ? ' page-break' : ''}">${html}</div>`)
+      .join('\n');
+
+    ventana.document.open();
+    ventana.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Documentos de Matrícula - ${student.nombres} ${student.apellido_paterno}</title>
+          <meta charset="utf-8">
+          <title>${titulo.replace(/</g, '&lt;')}</title>
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
           <style>
-            @media print {
-              @page {
-                size: letter;
-                margin: 15mm;
-              }
-              body {
-                margin: 0;
-                padding: 0;
-              }
-              .page-break {
-                page-break-before: always;
+            @page {
+              size: letter;
+              margin: 15mm 15mm 18mm 15mm;
+              @bottom-center {
+                content: "${textoCss(pie)} · Página " counter(page) " de " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 7.5pt;
+                color: #444;
               }
             }
-            * {
-              box-sizing: border-box;
-            }
+            * { box-sizing: border-box; }
             body {
               font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
               margin: 0;
@@ -256,38 +250,25 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
               print-color-adjust: exact;
               background: white;
             }
-            img {
-              display: block;
-            }
-            .section-line {
-              width: 4px;
-              height: 20px;
-              background-color: #000000;
-              border-radius: 2px;
-            }
+            img { display: block; }
+            .page-break { break-before: page; page-break-before: always; }
+            .section-line { width: 4px; height: 20px; background-color: #000000; border-radius: 2px; }
           </style>
         </head>
         <body>
-          <div class="document">
-            ${schoolContent}
-          </div>
-          <div class="page-break">
-            ${guardianContent}
-          </div>
+          ${cuerpo}
           <script>
             window.onload = function() {
               setTimeout(function() {
                 window.print();
-                window.onafterprint = function() {
-                  window.close();
-                };
+                window.onafterprint = function() { window.close(); };
               }, 800);
             };
           </script>
         </body>
       </html>
     `);
-    printWindow.document.close();
+    ventana.document.close();
   };
 
   return (
@@ -304,30 +285,32 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
 
       {/* Action Buttons */}
       <div className="flex justify-center flex-wrap gap-3 mb-6 no-print">
-        <button
-          onClick={printSchoolReceipt}
-          className="ios-btn ios-btn-success flex items-center space-x-2"
-        >
-          <span>🖨️</span>
-          <span>Imprimir Ficha de Matrícula</span>
-        </button>
+        {([
+          { docs: ['ficha'], texto: 'Imprimir Ficha de Matrícula', testid: 'imprimir-ficha' },
+          { docs: ['comprobante'], texto: 'Imprimir Comprobante Apoderado', testid: 'imprimir-comprobante' },
+          { docs: ['compromiso'], texto: 'Imprimir Carta de Compromiso', testid: 'imprimir-compromiso' },
+          { docs: ['autorizacion'], texto: 'Imprimir Autorización de Imagen', testid: 'imprimir-autorizacion' },
+        ] as { docs: DocumentoImprimible[]; texto: string; testid: string }[]).map(b => (
+          <button
+            key={b.testid}
+            onClick={() => imprimirDocumentos(b.docs)}
+            className="ios-btn ios-btn-success flex items-center space-x-2"
+            disabled={b.docs.includes('comprobante') && !guardianPrintFn}
+            data-testid={b.testid}
+          >
+            <span>🖨️</span>
+            <span>{b.texto}</span>
+          </button>
+        ))}
 
         <button
-          onClick={guardianPrintFn || undefined}
-          className="ios-btn ios-btn-success flex items-center space-x-2"
-          disabled={!guardianPrintFn}
-        >
-          <span>🖨️</span>
-          <span>Imprimir Comprobante Apoderado</span>
-        </button>
-
-        <button
-          onClick={printBothReceipts}
+          onClick={() => imprimirDocumentos(['ficha', 'comprobante', 'compromiso', 'autorizacion'])}
           className="ios-btn ios-btn-secondary flex items-center space-x-2"
           disabled={!guardianPrintFn}
+          data-testid="imprimir-todo"
         >
           <span>🖨️</span>
-          <span>Imprimir Ambos Documentos</span>
+          <span>Imprimir Todo (4 documentos)</span>
         </button>
 
         <button
@@ -660,12 +643,19 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
 
       {/* Guardian Receipt - Hidden, only for printing */}
       <div style={{ display: 'none' }}>
-        <div data-guardian-receipt>
+        <div data-guardian-receipt ref={guardianRef}>
           <GuardianReceipt
             student={student}
             currentYear={currentYear}
             onPrintReady={(printFn) => setGuardianPrintFn(() => printFn)}
           />
+        </div>
+        {/* Documentos de matrícula (orden de impresión: la autorización de imagen siempre al final, en hoja propia) */}
+        <div data-carta-compromiso ref={compromisoRef}>
+          <CartaCompromiso student={student} currentYear={currentYear} />
+        </div>
+        <div data-autorizacion-imagen ref={autorizacionRef}>
+          <AutorizacionImagen student={student} currentYear={currentYear} />
         </div>
       </div>
     </div>

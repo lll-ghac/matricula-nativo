@@ -17,6 +17,11 @@ const APODERADO_PRISMA_FIELDS = [
   'nivel_educacional', 'situacion_laboral', 'lugar_trabajo'
 ];
 
+// Autorización anual de uso de imagen (Ley 21.430 / 21.719). NULL = sin responder.
+const CAMPOS_AUTORIZACION_IMAGEN = ['autoriza_imagen_pedagogico', 'autoriza_imagen_redes', 'autoriza_imagen_prensa'];
+// Campos de control que solo escribe el servidor (nunca se aceptan desde el cliente).
+const CAMPOS_CONTROL_DOCUMENTOS = ['documentos_impresos_en', 'carta_imagen_archivada_por', 'carta_imagen_archivada_en'];
+
 // Strip unknown fields and convert rut to Int for Prisma apoderado writes
 function prepareApoderadoForPrisma(normalized) {
   const prepared = {};
@@ -239,6 +244,13 @@ async function createStudent(req, res) {
     if (!a.orden) a.orden = a.es_principal ? 1 : 2;
   });
 
+  // Matrícula nueva o rematrícula: el profesor debe preguntar y registrar las 3 respuestas.
+  if (CAMPOS_AUTORIZACION_IMAGEN.some(c => typeof restStudentData[c] !== 'boolean')) {
+    return res.status(400).json({ message: 'Debe registrar las 3 respuestas de autorización de uso de imagen (sí o no).' });
+  }
+  CAMPOS_CONTROL_DOCUMENTOS.forEach(c => delete restStudentData[c]);
+  delete restStudentData.carta_imagen_archivada;
+
   try {
     const yearVigente = await getAnioVigente();
     if (!yearVigente) {
@@ -264,6 +276,11 @@ async function createStudent(req, res) {
       anio_matricula: yearVigente,
       estado: 'matriculado',
       eliminado: false,
+      // Respuestas nuevas → hay que imprimir y archivar una carta nueva.
+      documentos_impresos_en: null,
+      carta_imagen_archivada: false,
+      carta_imagen_archivada_por: null,
+      carta_imagen_archivada_en: null,
       creado_por: req.user.id,
       modificado_por: req.user.id
     });
@@ -423,6 +440,39 @@ async function updateStudent(req, res) {
     // se limpia el motivo de una eliminación anterior (aunque el formulario lo reenvíe).
     delete alumnoData.creado_por;
     alumnoData.motivo_eliminacion = null;
+
+    // Autorización de imagen: opcional al editar (alumnos antiguos pueden quedar sin responder).
+    CAMPOS_CONTROL_DOCUMENTOS.forEach(c => delete alumnoData[c]);
+    for (const c of CAMPOS_AUTORIZACION_IMAGEN) {
+      if (c in alumnoData && alumnoData[c] !== null && typeof alumnoData[c] !== 'boolean') {
+        return res.status(400).json({ message: `Valor inválido para ${c}: debe ser sí, no o vacío.` });
+      }
+    }
+    // La pantalla de edición reenvía el alumno completo: solo se registra quién/cuándo archivó
+    // si la casilla CAMBIA, y si cambian las respuestas la carta archivada deja de corresponder.
+    const enviados = CAMPOS_AUTORIZACION_IMAGEN.filter(c => c in alumnoData);
+    const archivadaEnviada = typeof alumnoData.carta_imagen_archivada === 'boolean';
+    if (enviados.length > 0 || archivadaEnviada) {
+      const actual = await prisma.alumnos.findUnique({
+        where: { id: BigInt(id) },
+        select: { carta_imagen_archivada: true, ...Object.fromEntries(CAMPOS_AUTORIZACION_IMAGEN.map(c => [c, true])) }
+      });
+      const archivadaCambia = archivadaEnviada && actual && alumnoData.carta_imagen_archivada !== actual.carta_imagen_archivada;
+      const respuestasCambian = actual && enviados.some(c => alumnoData[c] !== actual[c]);
+      if (archivadaCambia) {
+        alumnoData.carta_imagen_archivada_por = alumnoData.carta_imagen_archivada ? BigInt(req.user.id) : null;
+        alumnoData.carta_imagen_archivada_en = alumnoData.carta_imagen_archivada ? new Date() : null;
+      } else {
+        delete alumnoData.carta_imagen_archivada;
+        if (respuestasCambian) {
+          alumnoData.carta_imagen_archivada = false;
+          alumnoData.carta_imagen_archivada_por = null;
+          alumnoData.carta_imagen_archivada_en = null;
+        }
+      }
+    } else {
+      delete alumnoData.carta_imagen_archivada;
+    }
 
     const result = await prisma.alumnos.updateMany({
       where: { id: BigInt(id) },
@@ -1246,11 +1296,34 @@ async function exportStudentsComplete(req, res) {
 }
 
 // POST /api/students/force-update (broken in original - keep as stub)
+// PATCH /api/students/:id/documentos-impresos — registra cuándo se imprimió la carta de autorización.
+async function markDocumentsPrinted(req, res) {
+  try {
+    const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
+    const impresoEn = new Date();
+    const result = await prisma.alumnos.updateMany({
+      where: { id: BigInt(id) },
+      data: { documentos_impresos_en: impresoEn, modificado_por: BigInt(req.user.id) }
+    });
+    if (result.count === 0) {
+      return res.status(404).json({ message: 'Estudiante no encontrado.' });
+    }
+    res.json({ message: 'Impresión registrada.', documentos_impresos_en: impresoEn });
+  } catch (error) {
+    console.error('[Students] Error en PATCH /api/students/:id/documentos-impresos:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 async function forceUpdateStudent(req, res) {
   return res.status(501).json({ message: 'Endpoint no implementado.' });
 }
 
 module.exports = {
+  markDocumentsPrinted,
   getStudents,
   createStudent,
   getStudentById,

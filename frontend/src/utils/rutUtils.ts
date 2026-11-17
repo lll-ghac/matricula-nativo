@@ -23,3 +23,10 @@ export const calculateDV = (rut: string | number): string => {
   }
   return String(calculatedDV);
 };
+// Formatea RUT con puntos y guion: (12345678, '9') → "12.345.678-9". Vacío si falta algún dato.
+export const formatRut = (rut?: string | number | null, dv?: string | null): string => {
+  if (!rut || !dv) return '';
+  const cuerpo = String(rut).replace(/[^\d]/g, '');
+  if (!cuerpo) return '';
+  return `${cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}-${String(dv).trim().toUpperCase()}`;
+};

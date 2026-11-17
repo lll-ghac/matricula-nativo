@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Users, BookOpen, Save, AlertCircle, Heart } from 'lucide-react';
+import { X, User, Users, BookOpen, Save, AlertCircle, Heart, ShieldCheck } from 'lucide-react';
 import NEEForm from './NEEForm';
+import { AUTORIZACIONES_IMAGEN } from './AutorizacionImagenForm';
 import { nacionalidades } from '../utils/chilean-data';
 
 interface Student {
@@ -105,6 +106,14 @@ interface Student {
   nee_otra_necesidad?: boolean;
   nee_observaciones?: string;
   nees?: number[];
+  // Autorización anual de uso de imagen (null = sin responder) y control de la carta física
+  anio_matricula?: number;
+  autoriza_imagen_pedagogico?: boolean | null;
+  autoriza_imagen_redes?: boolean | null;
+  autoriza_imagen_prensa?: boolean | null;
+  documentos_impresos_en?: string | null;
+  carta_imagen_archivada?: boolean;
+  carta_imagen_archivada_en?: string | null;
 }
 
 interface Guardian {
@@ -144,14 +153,14 @@ interface EditStudentModalProps {
   onClose: () => void;
   studentId: number;
   onUpdate: () => void;
-  initialSection?: 'student' | 'guardians' | 'academic' | 'nee';
+  initialSection?: 'student' | 'guardians' | 'academic' | 'nee' | 'autorizaciones';
 }
 
 const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onClose, studentId, onUpdate, initialSection }) => {
   const [student, setStudent] = useState<Student | null>(null);
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [activeSection, setActiveSection] = useState<'student' | 'guardians' | 'academic' | 'nee'>(initialSection || 'student');
+  const [activeSection, setActiveSection] = useState<'student' | 'guardians' | 'academic' | 'nee' | 'autorizaciones'>(initialSection || 'student');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -475,6 +484,19 @@ const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onClose, st
           >
             <Heart size={20} />
             NEE
+          </button>
+          <button
+            onClick={() => setActiveSection('autorizaciones')}
+            className="flex items-center gap-2 px-6 py-4"
+            data-testid="tab-autorizaciones"
+            style={{
+              backgroundColor: activeSection === 'autorizaciones' ? 'var(--color-primary-light)' : 'transparent',
+              color: activeSection === 'autorizaciones' ? 'var(--color-primary)' : 'var(--color-text)',
+              borderBottom: activeSection === 'autorizaciones' ? '2px solid var(--color-primary)' : 'none'
+            }}
+          >
+            <ShieldCheck size={20} />
+            Autorizaciones
           </button>
         </div>
 
@@ -1014,6 +1036,63 @@ const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onClose, st
                     selectedNees={(student.nees as number[]) || []}
                     onNeeChange={(ids) => handleStudentChange('nees' as keyof Student, ids as any)}
                   />
+                </div>
+              )}
+
+              {/* Autorizaciones de uso de imagen */}
+              {activeSection === 'autorizaciones' && (
+                <div className="space-y-5" data-testid="edicion-autorizaciones">
+                  <div>
+                    <h3 className="ios-subtitle text-center mb-2">
+                      Autorización de uso de imagen{student.anio_matricula ? ` — Año escolar ${student.anio_matricula}` : ''}
+                    </h3>
+                    <p className="text-sm text-center" style={{ color: 'var(--color-text-secondary, #6b7280)' }}>
+                      Si cambia alguna respuesta, hay que imprimir y firmar una carta nueva (la casilla de archivada se desmarca sola).
+                    </p>
+                  </div>
+                  {AUTORIZACIONES_IMAGEN.map(({ campo, letra, titulo }) => {
+                    const valor = student[campo];
+                    return (
+                      <fieldset key={campo} className="rounded-lg border p-4" style={{ borderColor: 'var(--color-border)' }}>
+                        <legend className="font-semibold px-1">{letra}. {titulo}</legend>
+                        <div className="flex flex-wrap gap-6 mt-1">
+                          {[{ v: true, t: 'SÍ AUTORIZO', id: 'si' }, { v: false, t: 'NO AUTORIZO', id: 'no' }, { v: null, t: 'Sin responder', id: 'pendiente' }].map(op => (
+                            <label key={op.id} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`edit-${campo}`}
+                                checked={op.v === null ? (valor !== true && valor !== false) : valor === op.v}
+                                onChange={() => setStudent({ ...student, [campo]: op.v })}
+                                data-testid={`edit-${campo}-${op.id}`}
+                                className="h-4 w-4"
+                              />
+                              <span>{op.t}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    );
+                  })}
+                  <div className="rounded-lg border p-4 space-y-1" style={{ borderColor: 'var(--color-border)' }}>
+                    <label className="flex items-center gap-3 cursor-pointer font-medium">
+                      <input
+                        type="checkbox"
+                        checked={!!student.carta_imagen_archivada}
+                        onChange={(e) => setStudent({ ...student, carta_imagen_archivada: e.target.checked })}
+                        data-testid="edit-carta-imagen-archivada"
+                        className="h-4 w-4"
+                      />
+                      Carta de autorización firmada y archivada en carpeta física
+                    </label>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary, #6b7280)' }}>
+                      {student.documentos_impresos_en
+                        ? `Última impresión: ${new Date(student.documentos_impresos_en).toLocaleString('es-CL')}`
+                        : 'La carta aún no se ha impreso desde el sistema.'}
+                      {student.carta_imagen_archivada && student.carta_imagen_archivada_en
+                        ? ` · Archivada el ${new Date(student.carta_imagen_archivada_en).toLocaleString('es-CL')}`
+                        : ''}
+                    </p>
+                  </div>
                 </div>
               )}
             </>
