@@ -3,6 +3,7 @@ import { Camera, RefreshCw, Printer, Download, CheckCircle2, XCircle, MinusCircl
 import { AUTORIZACIONES_IMAGEN } from './AutorizacionImagenForm';
 import { formatRut } from '../utils/rutUtils';
 import { useToast } from '../context/ToastContext';
+import EditStudentModal from './EditStudentModal';
 
 // Estadística de la autorización anual de uso de imagen (fotografías, videos, voz).
 // Datos: GET /api/statistics/autorizaciones-imagen (matriculados del año vigente). Los conteos se
@@ -132,10 +133,13 @@ const AutorizacionesImagenStats: React.FC = () => {
   const [soloRestringidos, setSoloRestringidos] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [guardandoId, setGuardandoId] = useState<number | null>(null);
+  // Alumno abierto en el modal de edición (pestaña Autorizaciones).
+  const [editandoId, setEditandoId] = useState<number | null>(null);
   const listaRef = useRef<HTMLDivElement>(null);
 
-  const cargar = async () => {
-    setCargando(true);
+  // silencioso = recargar tras editar un alumno sin reemplazar la pantalla por "Cargando…" (conserva filtros y scroll).
+  const cargar = async (silencioso = false) => {
+    if (!silencioso) setCargando(true);
     setError('');
     try {
       const r = await fetch('/api/statistics/autorizaciones-imagen', { credentials: 'include' });
@@ -149,7 +153,7 @@ const AutorizacionesImagenStats: React.FC = () => {
     }
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { cargar(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Aplica un filtro desde un número clicable y lleva la vista a la lista.
   const verLista = (f: Filtro | null, curso = 'todos') => {
@@ -269,7 +273,7 @@ const AutorizacionesImagenStats: React.FC = () => {
     return (
       <div className="ios-card p-8 text-center">
         <p className="ios-title mb-4" style={{ color: 'var(--color-error)' }}>Error al cargar: {error}</p>
-        <button className="ios-btn ios-btn-secondary" onClick={cargar}>Reintentar</button>
+        <button className="ios-btn ios-btn-secondary" onClick={() => cargar()}>Reintentar</button>
       </div>
     );
   }
@@ -289,7 +293,7 @@ const AutorizacionesImagenStats: React.FC = () => {
             <p className="text-sm" style={textoSec}>Fotografías, videos y registros de voz · {totales.total} alumnos matriculados</p>
           </div>
         </div>
-        <button className="ios-btn ios-btn-secondary flex items-center gap-2" onClick={cargar} data-testid="autorizaciones-actualizar">
+        <button className="ios-btn ios-btn-secondary flex items-center gap-2" onClick={() => cargar()} data-testid="autorizaciones-actualizar">
           <RefreshCw size={16} /> Actualizar
         </button>
       </div>
@@ -442,7 +446,7 @@ const AutorizacionesImagenStats: React.FC = () => {
           )}
         </div>
         <p className="text-xs" style={textoSec}>
-          "Sin responder" cuenta como restricción: no hay autorización registrada. "Marcar recibida" se activa cuando las 3 respuestas están registradas (Editar → Autorizaciones).
+          "Sin responder" cuenta como restricción: no hay autorización registrada. Pulse el nombre de un alumno para registrar o cambiar sus respuestas; "Marcar recibida" se activa cuando las 3 están registradas.
         </p>
 
         <div className="overflow-x-auto">
@@ -459,7 +463,18 @@ const AutorizacionesImagenStats: React.FC = () => {
             <tbody>
               {alumnosFiltrados.slice(0, 500).map(a => (
                 <tr key={a.id} style={{ ...borde, color: 'var(--color-text)' }}>
-                  <td className="py-2 pr-3">{a.nombre}</td>
+                  <td className="py-2 pr-3">
+                    <button
+                      type="button"
+                      className="text-left underline decoration-dotted underline-offset-2 hover:opacity-80"
+                      style={{ color: 'var(--color-text)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      onClick={() => setEditandoId(a.id)}
+                      title="Registrar o cambiar las autorizaciones de este alumno"
+                      data-testid={`autorizaciones-abrir-${a.id}`}
+                    >
+                      {a.nombre}
+                    </button>
+                  </td>
                   <td className="py-2 px-2 whitespace-nowrap">{formatRut(a.rut, a.dv)}</td>
                   <td className="py-2 px-2 whitespace-nowrap">{a.curso}</td>
                   {USOS.map(u => <td key={u.campo} className="py-2 px-2"><Valor v={a[u.campo]} /></td>)}
@@ -476,7 +491,7 @@ const AutorizacionesImagenStats: React.FC = () => {
                           className="ios-btn ios-btn-secondary text-xs"
                           style={{ padding: '2px 8px' }}
                           disabled={guardandoId === a.id || !respuestasCompletas(a)}
-                          title={respuestasCompletas(a) ? 'La carta firmada fue devuelta y archivada' : 'Primero registre las 3 respuestas (Editar → Autorizaciones)'}
+                          title={respuestasCompletas(a) ? 'La carta firmada fue devuelta y archivada' : 'Primero registre las 3 respuestas (pulse el nombre del alumno)'}
                           onClick={() => marcarCarta(a, true)}
                           data-testid={`carta-recibida-${a.id}`}
                         >
@@ -496,6 +511,16 @@ const AutorizacionesImagenStats: React.FC = () => {
           )}
         </div>
       </div>
+
+      {editandoId !== null && (
+        <EditStudentModal
+          isOpen={true}
+          studentId={editandoId}
+          initialSection="autorizaciones"
+          onClose={() => setEditandoId(null)}
+          onUpdate={() => cargar(true)}
+        />
+      )}
     </div>
   );
 };

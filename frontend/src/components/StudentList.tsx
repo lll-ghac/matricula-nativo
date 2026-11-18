@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, Search, Eye, Trash2, FileText, Download, List, Loader2, UserX, BookOpen, User, Users, Heart } from 'lucide-react';
+import { GraduationCap, Search, Eye, Trash2, FileText, Download, List, Loader2, UserX, BookOpen, User, Users, Heart, Camera } from 'lucide-react';
 import { formatBirthDate, formatDateTime } from '../utils/dateUtils';
 import PDFReceipt from './PDFReceipt';
 import EditStudentModal from './EditStudentModal';
@@ -75,7 +75,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
   const [openEditMenu, setOpenEditMenu] = useState<number | null>(null);
 
   // Sección inicial del modal de edición
-  const [editSection, setEditSection] = useState<'student' | 'guardians' | 'academic' | 'nee'>('student');
+  const [editSection, setEditSection] = useState<'student' | 'guardians' | 'academic' | 'nee' | 'autorizaciones'>('student');
 
   useEffect(() => {
     const initializeData = async () => {
@@ -541,7 +541,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
     }
   };
 
-  const openEditModal = (studentId: number, section: 'student' | 'guardians' | 'academic' | 'nee') => {
+  const openEditModal = (studentId: number, section: 'student' | 'guardians' | 'academic' | 'nee' | 'autorizaciones') => {
     setEditSection(section);
     setEditingStudentId(studentId);
     setShowEditModal(true);
@@ -949,6 +949,16 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
                               title="Editar NEE"
                             >
                               <Heart size={16} />
+                            </button>
+                            {/* Siempre abre el modal (también en el Panel de Administración, que reemplaza otros íconos por el formulario completo) */}
+                            <button
+                              onClick={() => openEditModal(student.id, 'autorizaciones')}
+                              className="ios-btn ios-btn-secondary text-xs py-2 px-2.5 flex items-center justify-center"
+                              title="Autorizaciones de uso de imagen"
+                              aria-label={`Autorizaciones de uso de imagen de ${student.nombres || ''} ${student.apellido_paterno || ''}`.trim()}
+                              data-testid={`editar-autorizaciones-${student.id}`}
+                            >
+                              <Camera size={16} />
                             </button>
                           </>
                         )}

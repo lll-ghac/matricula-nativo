@@ -207,7 +207,14 @@ const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onClose, st
       console.log('- Beca:', studentData.beca);
       console.log('- PAE:', studentData.pae);
       
-      setStudent(studentData);
+      // El GET devuelve las NEE como objetos {id, codigo, descripcion}; la pestaña NEE y el guardado usan ids.
+      // Sin esto, las NEE existentes aparecían desmarcadas y se perdían al guardar.
+      setStudent({
+        ...studentData,
+        nees: Array.isArray(studentData.nees)
+          ? studentData.nees.map((n: any) => (n !== null && typeof n === 'object' ? Number(n.id) : Number(n))).filter((n: number) => Number.isInteger(n) && n > 0)
+          : []
+      });
 
       console.log('📡 Enviando solicitud GET a:', `/api/students/${studentId}/apoderados`);
       const guardiansResponse = await fetch(`/api/students/${studentId}/apoderados`, {

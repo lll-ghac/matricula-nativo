@@ -58,6 +58,25 @@ function prepareAlumnoPrismaData(data) {
   return d;
 }
 
+// NEE: acepta ids numéricos, strings numéricos u objetos {id}/{nee_id} (el GET de un alumno
+// devuelve objetos y el modal de edición los reenvía tal cual). null = entrada inválida.
+function normalizarNees(nees) {
+  if (!Array.isArray(nees)) return null;
+  const ids = nees.map(n => Number(n !== null && typeof n === 'object' ? (n.id ?? n.nee_id) : n));
+  if (ids.some(x => !Number.isInteger(x) || x <= 0)) return null;
+  return [...new Set(ids)];
+}
+
+// Reemplaza las NEE del alumno en una sola transacción (si falla, no se pierde ninguna).
+async function sincronizarNees(alumnoId, neeIds) {
+  await prisma.$transaction([
+    prisma.alumno_nee.deleteMany({ where: { alumno_id: BigInt(alumnoId) } }),
+    ...(neeIds.length > 0
+      ? [prisma.alumno_nee.createMany({ data: neeIds.map(nee_id => ({ alumno_id: BigInt(alumnoId), nee_id })), skipDuplicates: true })]
+      : [])
+  ]);
+}
+
 // Get all apoderados for a student with relation data, ordered by orden
 async function getApoderadosDeAlumno(alumnoId) {
   const relations = await prisma.alumno_apoderado.findMany({
@@ -262,6 +281,11 @@ async function createStudent(req, res) {
   CAMPOS_CONTROL_DOCUMENTOS.forEach(c => delete restStudentData[c]);
   delete restStudentData.carta_imagen_archivada;
 
+  const neeIdsNuevas = nees === undefined || nees === null ? [] : normalizarNees(nees);
+  if (neeIdsNuevas === null) {
+    return res.status(400).json({ message: 'Lista de NEE inválida.' });
+  }
+
   try {
     const yearVigente = await getAnioVigente();
     if (!yearVigente) {
@@ -317,14 +341,8 @@ async function createStudent(req, res) {
 
     await processApoderadosForAlumno(studentId, allApoderados);
 
-    // Sync NEEs
-    await prisma.alumno_nee.deleteMany({ where: { alumno_id: BigInt(studentId) } });
-    if (nees && Array.isArray(nees) && nees.length > 0) {
-      await prisma.alumno_nee.createMany({
-        data: nees.map(nee_id => ({ alumno_id: BigInt(studentId), nee_id: parseInt(nee_id) })),
-        skipDuplicates: true
-      });
-    }
+    // Sync NEEs (validadas al inicio; transacción: si falla no se pierde ninguna)
+    await sincronizarNees(studentId, neeIdsNuevas);
 
     // Build response
     const studentComplete = await prisma.alumnos.findUnique({
@@ -418,6 +436,11 @@ async function updateStudent(req, res) {
     const studentData = req.body;
     const { nees, apoderados: allApoderados, ...restStudentData } = studentData;
     const shouldUpdateGuardians = allApoderados !== undefined;
+    // NEE: solo se tocan si vienen en la petición; se validan ANTES de escribir nada.
+    const neeIdsActualizar = nees === undefined || nees === null ? undefined : normalizarNees(nees);
+    if (neeIdsActualizar === null) {
+      return res.status(400).json({ message: 'Lista de NEE inválida.' });
+    }
 
     const yearVigente = await getAnioVigente();
     if (!yearVigente) {
@@ -502,6 +525,11 @@ async function updateStudent(req, res) {
       return res.status(200).json({ message: 'Datos del estudiante actualizados exitosamente (sin cambios en la base de datos).' });
     }
 
+    // NEE: solo si vinieron en la petición (antes se borraban siempre, aunque no se enviaran).
+    if (neeIdsActualizar !== undefined) {
+      await sincronizarNees(id, neeIdsActualizar);
+    }
+
     // If no apoderados sent, return current state
     if (!shouldUpdateGuardians) {
       const studentComplete = await prisma.alumnos.findFirst({
@@ -530,14 +558,6 @@ async function updateStudent(req, res) {
 
     await processApoderadosForAlumno(id, allApoderados);
 
-    // Sync NEEs
-    await prisma.alumno_nee.deleteMany({ where: { alumno_id: BigInt(id) } });
-    if (nees && Array.isArray(nees) && nees.length > 0) {
-      await prisma.alumno_nee.createMany({
-        data: nees.map(nee_id => ({ alumno_id: BigInt(id), nee_id: parseInt(nee_id) })),
-        skipDuplicates: true
-      });
-    }
 
     const studentComplete = await prisma.alumnos.findFirst({
       where: { id: BigInt(id) },
