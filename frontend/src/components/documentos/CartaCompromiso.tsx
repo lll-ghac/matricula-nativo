@@ -74,11 +74,9 @@ const CartaCompromiso: React.FC<CartaCompromisoProps> = ({ student, currentYear 
       </TarjetaDatos>
 
       <p style={{ ...estilos.parrafo, marginTop: '10px' }}>
-        Yo, <strong>{nombreApoderado || '______________________________'}</strong>, en calidad de apoderado/a del
-        estudiante <strong>{nombreCompletoAlumno(student) || '______________________________'}</strong>, que ingresa al
-        curso <strong>{cursoTexto(student) || '__________'}</strong> para el año escolar <strong>{currentYear}</strong>,
-        declaro por medio de la presente mi compromiso y responsabilidad con el proceso educativo de mi hijo/a en la{' '}
-        {ESTABLECIMIENTO.nombre}, asumiendo las siguientes obligaciones:
+        Yo, el/la apoderado/a individualizado/a en el recuadro anterior, declaro por medio de la presente mi compromiso
+        y responsabilidad con el proceso educativo de mi hijo/a durante el año escolar <strong>{currentYear}</strong> en
+        la {ESTABLECIMIENTO.nombre}, asumiendo las siguientes obligaciones:
       </p>
 
       {COMPROMISOS.map(({ titulo, puntos }) => (
