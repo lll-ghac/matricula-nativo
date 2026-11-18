@@ -1,10 +1,10 @@
 import React from 'react';
 import type { StudentData } from '../../types';
 import { ESTABLECIMIENTO } from '../../config/establecimiento';
-import EncabezadoDocumento from './EncabezadoDocumento';
+import EncabezadoDocumento, { TituloSeccion, TarjetaDatos, Campo } from './EncabezadoDocumento';
 import {
   estilos, nombreCompletoAlumno, nombreCompletoApoderado, apoderadoPrincipal,
-  cursoTexto, rutApoderado, datoOLinea,
+  cursoTexto, rutAlumno, rutApoderado,
 } from './estilosDocumento';
 
 interface CartaCompromisoProps {
@@ -60,33 +60,42 @@ const CartaCompromiso: React.FC<CartaCompromisoProps> = ({ student, currentYear 
   const nombreApoderado = nombreCompletoApoderado(apoderado);
 
   return (
-    <div style={estilos.hoja} data-documento="carta-compromiso">
-      <EncabezadoDocumento titulo="Carta de Compromiso del Apoderado/a" subtitulo={`Año escolar ${currentYear}`} />
+    <div style={{ ...estilos.hoja, fontSize: '12.5px', color: '#1f2937' }} data-documento="carta-compromiso">
+      <EncabezadoDocumento titulo="Carta de Compromiso" subtitulo="del Apoderado/a" currentYear={currentYear} />
 
-      <p style={estilos.parrafo}>
-        Yo, <span style={estilos.dato}>{datoOLinea(nombreApoderado, 40)}</span>, RUT:{' '}
-        <span style={estilos.dato}>{datoOLinea(rutApoderado(apoderado), 14)}</span>, en calidad de apoderado/a del
-        estudiante <span style={estilos.dato}>{datoOLinea(nombreCompletoAlumno(student), 36)}</span>, que ingresa al
-        curso de <span style={estilos.dato}>{datoOLinea(cursoTexto(student), 20)}</span> para el año escolar{' '}
-        <strong>{currentYear}</strong>, declaro por medio de la presente mi compromiso y responsabilidad con el proceso
-        educativo de mi hijo/a en la {ESTABLECIMIENTO.nombre}, asumiendo las siguientes obligaciones:
+      <TituloSeccion>Datos del estudiante y apoderado/a</TituloSeccion>
+      <TarjetaDatos>
+        <Campo etiqueta="Estudiante" valor={nombreCompletoAlumno(student)} ancho="completo" />
+        <Campo etiqueta="RUT" valor={rutAlumno(student)} />
+        <Campo etiqueta="Curso" valor={cursoTexto(student)} />
+        <Campo etiqueta="Apoderado/a" valor={nombreApoderado} ancho="completo" />
+        <Campo etiqueta="RUT" valor={rutApoderado(apoderado)} />
+        <Campo etiqueta="Parentesco" valor={apoderado?.parentesco} />
+      </TarjetaDatos>
+
+      <p style={{ ...estilos.parrafo, marginTop: '10px' }}>
+        Yo, <strong>{nombreApoderado || '______________________________'}</strong>, en calidad de apoderado/a del
+        estudiante <strong>{nombreCompletoAlumno(student) || '______________________________'}</strong>, que ingresa al
+        curso <strong>{cursoTexto(student) || '__________'}</strong> para el año escolar <strong>{currentYear}</strong>,
+        declaro por medio de la presente mi compromiso y responsabilidad con el proceso educativo de mi hijo/a en la{' '}
+        {ESTABLECIMIENTO.nombre}, asumiendo las siguientes obligaciones:
       </p>
 
       {COMPROMISOS.map(({ titulo, puntos }) => (
         <div key={titulo}>
-          <h2 style={estilos.seccion}>{titulo}</h2>
-          <ul style={estilos.lista}>
-            {puntos.map(p => <li key={p} style={{ marginBottom: '3px' }}>{p}</li>)}
+          <TituloSeccion tamano={13}>{titulo}</TituloSeccion>
+          <ul style={{ ...estilos.lista, textAlign: 'justify' }}>
+            {puntos.map(p => <li key={p} style={{ marginBottom: '2px' }}>{p}</li>)}
           </ul>
         </div>
       ))}
 
-      <p style={{ ...estilos.parrafo, marginTop: '12px' }}>
+      <p style={{ ...estilos.parrafo, marginTop: '10px' }}>
         Declaro haber leído y comprendido cada punto de este compromiso, entendiendo que su cumplimiento es fundamental
         para favorecer el aprendizaje y desarrollo integral del estudiante.
       </p>
 
-      <div style={estilos.firmas}>
+      <div style={{ ...estilos.firmas, marginTop: '40px' }}>
         <div style={estilos.firma}>
           <div style={estilos.lineaFirma}>Firma del Apoderado/a</div>
           <div>{nombreApoderado}</div>
@@ -95,7 +104,7 @@ const CartaCompromiso: React.FC<CartaCompromisoProps> = ({ student, currentYear 
           <div style={estilos.lineaFirma}>Firma Profesor/a Jefe</div>
         </div>
       </div>
-      <p style={{ marginTop: '24px', fontSize: '11px' }}>Fecha: ____ / ____ / ______</p>
+      <p style={{ marginTop: '18px', fontSize: '11px' }}>Fecha: ____ / ____ / ______</p>
     </div>
   );
 };

@@ -1,10 +1,10 @@
 import React from 'react';
 import type { StudentData } from '../../types';
 import { AUTORIZACIONES_IMAGEN } from '../AutorizacionImagenForm';
-import EncabezadoDocumento from './EncabezadoDocumento';
+import EncabezadoDocumento, { TituloSeccion, TarjetaDatos, Campo } from './EncabezadoDocumento';
 import {
   estilos, nombreCompletoAlumno, nombreCompletoApoderado, apoderadoPrincipal,
-  cursoTexto, rutAlumno, rutApoderado, datoOLinea,
+  cursoTexto, rutAlumno, rutApoderado,
 } from './estilosDocumento';
 
 interface AutorizacionImagenProps {
@@ -13,8 +13,7 @@ interface AutorizacionImagenProps {
 }
 
 // Versión compacta para que la carta quepa en UNA hoja carta.
-const hoja: React.CSSProperties = { ...estilos.hoja, fontSize: '11px', lineHeight: 1.35 };
-const seccion: React.CSSProperties = { ...estilos.seccion, fontSize: '11.5px', margin: '10px 0 4px 0' };
+const hoja: React.CSSProperties = { ...estilos.hoja, fontSize: '11px', lineHeight: 1.35, color: '#1f2937' };
 const parrafo: React.CSSProperties = { ...estilos.parrafo, margin: '0 0 5px 0' };
 const lista: React.CSSProperties = { ...estilos.lista, margin: '0 0 4px 0' };
 const item: React.CSSProperties = { marginBottom: '2px' };
@@ -32,29 +31,24 @@ const AutorizacionImagen: React.FC<AutorizacionImagenProps> = ({ student, curren
   return (
     <div style={hoja} data-documento="autorizacion-imagen">
       <EncabezadoDocumento
-        titulo="Carta de Autorización Anual para el Uso de Imagen y Registros Audiovisuales de Estudiantes"
-        subtitulo={`Año escolar ${currentYear}`}
+        titulo="Autorización de Uso de Imagen"
+        subtitulo="y registros audiovisuales — renovación anual"
+        currentYear={currentYear}
       />
 
-      <h2 style={{ ...seccion, marginTop: '4px' }}>1. Identificación del/la estudiante y apoderado/a</h2>
-      <ul style={lista}>
-        <li style={item}>Nombre completo del/la estudiante: <span style={estilos.dato}>{datoOLinea(nombreCompletoAlumno(student), 40)}</span></li>
-        <li style={item}>
-          RUN: <span style={estilos.dato}>{datoOLinea(rutAlumno(student), 14)}</span>{'  '}
-          Curso: <span style={estilos.dato}>{datoOLinea(cursoTexto(student), 16)}</span>
-        </li>
-        <li style={item}>Nombre completo del/la apoderado/a: <span style={estilos.dato}>{datoOLinea(nombreCompletoApoderado(apoderado), 40)}</span></li>
-        <li style={item}>
-          RUN: <span style={estilos.dato}>{datoOLinea(rutApoderado(apoderado), 14)}</span>{'  '}
-          Parentesco / Calidad: <span style={estilos.dato}>{datoOLinea(apoderado?.parentesco, 16)}</span>
-        </li>
-        <li style={item}>
-          Correo electrónico: <span style={estilos.dato}>{datoOLinea(apoderado?.email, 22)}</span>{'  '}
-          Teléfono: <span style={estilos.dato}>{datoOLinea(apoderado?.celular, 14)}</span>
-        </li>
-      </ul>
+      <TituloSeccion tamano={12.5}>1. Identificación del/la estudiante y apoderado/a</TituloSeccion>
+      <TarjetaDatos tamano={11.5}>
+        <Campo etiqueta="Estudiante" valor={nombreCompletoAlumno(student)} ancho="completo" />
+        <Campo etiqueta="RUN" valor={rutAlumno(student)} />
+        <Campo etiqueta="Curso" valor={cursoTexto(student)} />
+        <Campo etiqueta="Apoderado/a" valor={nombreCompletoApoderado(apoderado)} ancho="completo" />
+        <Campo etiqueta="RUN" valor={rutApoderado(apoderado)} />
+        <Campo etiqueta="Parentesco / Calidad" valor={apoderado?.parentesco} />
+        <Campo etiqueta="Correo electrónico" valor={apoderado?.email} />
+        <Campo etiqueta="Teléfono" valor={apoderado?.celular} />
+      </TarjetaDatos>
 
-      <h2 style={seccion}>2. Consentimiento granular por finalidad</h2>
+      <TituloSeccion tamano={12.5}>2. Consentimiento granular por finalidad</TituloSeccion>
       <p style={{ ...parrafo, fontStyle: 'italic' }}>
         (Decisión independiente para cada uso. La negativa a cualquiera de estas opciones no afectará en modo alguno la
         matrícula, evaluación ni participación del estudiante en actividades escolares).
@@ -72,7 +66,7 @@ const AutorizacionImagen: React.FC<AutorizacionImagenProps> = ({ student, curren
         );
       })}
 
-      <h2 style={seccion}>3. Condiciones de resguardo y derechos</h2>
+      <TituloSeccion tamano={12.5}>3. Condiciones de resguardo y derechos</TituloSeccion>
       <ul style={lista}>
         <li style={item}><strong>Sin fines comerciales:</strong> Las imágenes serán utilizadas exclusivamente con fines educativos, informativos e institucionales, quedando estrictamente prohibida su venta, cesión a terceros con fines comerciales o uso en campañas de marketing pagado.</li>
         <li style={item}><strong>Resguardo de identidad:</strong> En publicaciones abiertas, el establecimiento evitará asociar el rostro del menor con datos sensibles como su nombre completo, dirección o antecedentes médicos, resguardando siempre el interés superior del niño/a.</li>
@@ -80,7 +74,7 @@ const AutorizacionImagen: React.FC<AutorizacionImagenProps> = ({ student, curren
         <li style={item}><strong>Vigencia:</strong> Esta autorización tiene validez únicamente durante el año escolar {currentYear} y deberá ser renovada en el próximo periodo lectivo.</li>
       </ul>
 
-      <h2 style={seccion}>4. Declaración de consentimiento y asentimiento</h2>
+      <TituloSeccion tamano={12.5}>4. Declaración de consentimiento y asentimiento</TituloSeccion>
       <p style={parrafo}>
         Declaro haber leído y comprendido las condiciones de este documento, otorgando libremente mi decisión respecto al
         uso de la imagen de mi pupilo/a. Asimismo, declaro haber conversado esta decisión con el/la estudiante, respetando
