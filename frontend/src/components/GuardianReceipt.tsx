@@ -9,9 +9,11 @@ interface GuardianReceiptProps {
   student: StudentData;
   currentYear: number;
   onPrintReady?: (printFn: () => void) => void;
+  // false cuando el comprobante se usa como documento para imprimir o en vista previa.
+  mostrarBotonDescarga?: boolean;
 }
 
-const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear, onPrintReady }) => {
+const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear, onPrintReady, mostrarBotonDescarga = true }) => {
   const toast = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -130,8 +132,9 @@ const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear,
 
   return (
     <div>
-      {/* Botón de descarga */}
-      <div className="mb-6 flex justify-center">
+      {/* Botón de descarga (no es parte del documento) */}
+      {mostrarBotonDescarga && (
+      <div className="mb-6 flex justify-center no-print">
         <button
           onClick={handleDownloadPDF}
           className="ios-btn ios-btn-primary flex items-center gap-2"
@@ -139,6 +142,7 @@ const GuardianReceipt: React.FC<GuardianReceiptProps> = ({ student, currentYear,
           📄 Descargar Comprobante Apoderado
         </button>
       </div>
+      )}
 
       {/* Comprobante */}
       <div

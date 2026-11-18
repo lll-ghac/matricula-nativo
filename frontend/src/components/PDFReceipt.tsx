@@ -254,6 +254,8 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
             }
             img { display: block; }
             .page-break { break-before: page; page-break-before: always; }
+            /* Nada de la interfaz (botones, controles) debe salir en el papel. */
+            button, .no-print { display: none !important; }
             .section-line { width: 4px; height: 20px; background-color: #000000; border-radius: 2px; }
           </style>
         </head>
@@ -685,7 +687,7 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
           data-testid={`vista-previa-${vista}`}
           style={{ width: '216mm', maxWidth: '100%', minHeight: '279mm', padding: '15mm', margin: '0 auto', boxShadow: '0 0 10px rgba(0,0,0,0.1)', color: '#000', overflowX: 'auto' }}
         >
-          {vista === 'comprobante' && <GuardianReceipt student={student} currentYear={currentYear} />}
+          {vista === 'comprobante' && <GuardianReceipt student={student} currentYear={currentYear} mostrarBotonDescarga={false} />}
           {vista === 'compromiso' && <CartaCompromiso student={student} currentYear={currentYear} />}
           {vista === 'autorizacion' && <AutorizacionImagen student={student} currentYear={currentYear} />}
         </div>
@@ -698,6 +700,7 @@ const PDFReceipt: React.FC<PDFReceiptProps> = ({
             student={student}
             currentYear={currentYear}
             onPrintReady={(printFn) => setGuardianPrintFn(() => printFn)}
+            mostrarBotonDescarga={false}
           />
         </div>
         {/* Documentos de matrícula (orden de impresión: la autorización de imagen siempre al final, en hoja propia) */}
