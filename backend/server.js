@@ -225,6 +225,7 @@ app.get('/api/students/:id', authenticateToken, authorizeRole(['profesor', 'insp
 app.put('/api/students/:id', authenticateToken, authorizeRole(['profesor', 'inspector', 'administrador']), students.updateStudent);
 app.delete('/api/students/:id', authenticateToken, authorizeRole(['administrador', 'inspector']), students.deleteStudent);
 app.put('/api/students/:id/retire', authenticateToken, authorizeRole(['administrador', 'inspector']), students.retireStudent);
+app.patch('/api/students/:id/carta-imagen', authenticateToken, authorizeRole(['inspector', 'administrador']), students.setImageLetterArchived);
 app.patch('/api/students/:id/documentos-impresos', authenticateToken, authorizeRole(['profesor', 'inspector', 'administrador']), students.markDocumentsPrinted);
 app.get('/api/student/check/:rut', authenticateToken, authorizeRole(['profesor', 'inspector', 'administrador']), students.checkStudentByRut);
 

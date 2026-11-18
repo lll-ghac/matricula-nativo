@@ -1324,6 +1324,45 @@ async function exportStudentsComplete(req, res) {
 }
 
 // POST /api/students/force-update (broken in original - keep as stub)
+// PATCH /api/students/:id/carta-imagen — marca/desmarca "carta de autorización firmada y archivada"
+// (desde la estadística de autorizaciones). Solo se puede marcar si las 3 respuestas están registradas.
+async function setImageLetterArchived(req, res) {
+  try {
+    const { id } = req.params;
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({ message: 'ID de estudiante inválido. Debe ser un número.' });
+    }
+    const { archivada } = req.body || {};
+    if (typeof archivada !== 'boolean') {
+      return res.status(400).json({ message: 'Debe indicar archivada: true o false.' });
+    }
+    const alumno = await prisma.alumnos.findUnique({
+      where: { id: BigInt(id) },
+      select: { id: true, eliminado: true, ...Object.fromEntries(CAMPOS_AUTORIZACION_IMAGEN.map(c => [c, true])) }
+    });
+    if (!alumno || alumno.eliminado === true) {
+      return res.status(404).json({ message: 'Estudiante no encontrado.' });
+    }
+    if (archivada && CAMPOS_AUTORIZACION_IMAGEN.some(c => typeof alumno[c] !== 'boolean')) {
+      return res.status(400).json({ message: 'Primero registre las 3 respuestas de autorización (Editar → Autorizaciones).' });
+    }
+    const ahora = new Date();
+    await prisma.alumnos.update({
+      where: { id: BigInt(id) },
+      data: {
+        carta_imagen_archivada: archivada,
+        carta_imagen_archivada_por: archivada ? BigInt(req.user.id) : null,
+        carta_imagen_archivada_en: archivada ? ahora : null,
+        modificado_por: BigInt(req.user.id)
+      }
+    });
+    res.json({ message: archivada ? 'Carta marcada como recibida y archivada.' : 'Marca de carta archivada quitada.', archivada, carta_imagen_archivada_en: archivada ? ahora : null });
+  } catch (error) {
+    console.error('[Students] Error en PATCH /api/students/:id/carta-imagen:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 // PATCH /api/students/:id/documentos-impresos — registra cuándo se imprimió la carta de autorización.
 async function markDocumentsPrinted(req, res) {
   try {
@@ -1352,6 +1391,7 @@ async function forceUpdateStudent(req, res) {
 
 module.exports = {
   markDocumentsPrinted,
+  setImageLetterArchived,
   getStudents,
   createStudent,
   getStudentById,
