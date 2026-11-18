@@ -901,7 +901,7 @@ const StudentList: React.FC<StudentListProps> = ({ onEditStudent, onEditAcademic
                         style={{
                           backgroundColor:
                             student.estado === 'matriculado' ? 'var(--color-success)' :
-                            student.estado === 'Retirado' ? 'var(--color-warning)' :
+                            student.estado?.toLowerCase() === 'retirado' ? 'var(--color-warning)' :
                             'var(--color-error)'
                         }}
                         title={`Matriculado por: ${student.actualizado_por || student.creado_por || 'No disponible'}`}

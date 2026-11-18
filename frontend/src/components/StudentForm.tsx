@@ -76,9 +76,12 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
     // Matrícula nueva o rematrícula de un eliminado: la autorización de imagen se renueva cada año,
     // así que parte sin responder para obligar a preguntarle al apoderado.
-    const esMatricula = !initialData.id || (initialData as any).eliminado === true;
+    const esRetirado = String(initialData.estado || '').toLowerCase() === 'retirado';
+    const esMatricula = !initialData.id || (initialData as any).eliminado === true || esRetirado;
     if (esMatricula) {
       AUTORIZACIONES_IMAGEN.forEach(({ campo }) => { (initialData as any)[campo] = null; });
+      // Rematrícula (eliminado o retirado): vuelve a quedar matriculado.
+      initialData.estado = 'matriculado';
     }
     setRequiereAutorizacion(esMatricula);
 

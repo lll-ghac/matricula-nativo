@@ -287,6 +287,8 @@ async function createStudent(req, res) {
       anio_matricula: yearVigente,
       estado: 'matriculado',
       eliminado: false,
+      fecha_retiro: null,
+      observacion_retiro: null,
       // Respuestas nuevas → hay que imprimir y archivar una carta nueva.
       documentos_impresos_en: null,
       carta_imagen_archivada: false,
@@ -451,6 +453,12 @@ async function updateStudent(req, res) {
     // se limpia el motivo de una eliminación anterior (aunque el formulario lo reenvíe).
     delete alumnoData.creado_por;
     alumnoData.motivo_eliminacion = null;
+    if (typeof alumnoData.estado === 'string') alumnoData.estado = alumnoData.estado.toLowerCase();
+    if (alumnoData.estado === 'matriculado') {
+      // Rematrícula de un retirado: deja de estar retirado.
+      alumnoData.fecha_retiro = null;
+      alumnoData.observacion_retiro = null;
+    }
 
     // Autorización de imagen: opcional al editar (alumnos antiguos pueden quedar sin responder).
     CAMPOS_CONTROL_DOCUMENTOS.forEach(c => delete alumnoData[c]);
@@ -843,7 +851,7 @@ async function retireStudent(req, res) {
     const result = await prisma.alumnos.updateMany({
       where: { id: BigInt(id), anio_matricula: anioVigente },
       data: {
-        estado: 'Retirado',
+        estado: 'retirado', // la BD solo acepta minúsculas (alumnos_estado_check)
         fecha_retiro: new Date(fecha_retiro),
         observacion_retiro: observacion_retiro.trim(),
         modificado_por: BigInt(req.user.id),
@@ -1084,6 +1092,15 @@ async function checkStudentByRut(req, res) {
         return res.json({
           status: 'precarga',
           message: 'El estudiante fue eliminado previamente. Puede volver a matricularlo.',
+          data: studentWithGuardians
+        });
+      }
+
+      // Retirado este mismo año: se puede volver a matricular (se precargan sus datos).
+      if (String(studentWithGuardians.estado || '').toLowerCase() === 'retirado') {
+        return res.json({
+          status: 'precarga',
+          message: 'El estudiante fue retirado este año. Puede volver a matricularlo.',
           data: studentWithGuardians
         });
       }
