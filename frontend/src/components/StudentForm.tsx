@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StudentDataForm from './StudentDataForm';
 import DualGuardianForm from './DualGuardianForm';
 import AcademicInfoForm from './AcademicInfoForm';
@@ -41,6 +41,17 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const [validationError, setValidationError] = useState<string>('');
   // true en matrícula nueva o rematrícula: hay que preguntar y registrar la autorización de imagen.
   const [requiereAutorizacion, setRequiereAutorizacion] = useState(true);
+  // Protección contra clics que "caen" en otro botón al cambiar de paso: el botón "Siguiente"
+  // del paso 6 y "Guardar Matrícula" del paso 7 quedan en la misma zona de la pantalla, y un
+  // doble clic guardaba la matrícula sin pasar por Observaciones (reportado 2026-11-17).
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const pasoMostradoEn = useRef<number>(Date.now());
+  const ESPERA_ANTES_DE_GUARDAR_MS = 1000;
+
+  useEffect(() => {
+    pasoMostradoEn.current = Date.now();
+    formTopRef.current?.scrollIntoView({ block: 'start' });
+  }, [currentStep]);
 
   const [studentData, setStudentData] = useState<Partial<StudentData>>({});
 
@@ -175,6 +186,10 @@ const StudentForm: React.FC<StudentFormProps> = ({
   };
 
   const handleSaveStudent = async () => {
+    if (Date.now() - pasoMostradoEn.current < ESPERA_ANTES_DE_GUARDAR_MS) {
+      console.warn('[StudentForm] Clic en Guardar ignorado: llegó justo al cambiar de paso.');
+      return;
+    }
     const autorizacionesPendientes = getMissingFieldsByStep(6);
     if (autorizacionesPendientes.length > 0) {
       toast.error('Falta registrar la autorización de uso de imagen (paso 6).');
@@ -355,7 +370,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 ios-card mt-6">
+    <div ref={formTopRef} className="max-w-5xl mx-auto p-6 ios-card mt-6" style={{ scrollMarginTop: '1rem' }}>
       <div className="text-center mb-6">
         <h2 className="ios-title-large">Formulario de Matrícula - Paso {currentStep} de 7</h2>
       </div>
