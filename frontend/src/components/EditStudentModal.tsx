@@ -365,7 +365,10 @@ const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onClose, st
       if (!studentResponse.ok) {
         const errorText = await studentResponse.text();
         console.error('❌ Error en respuesta del estudiante:', errorText);
-        throw new Error(`Error al guardar datos del estudiante: ${studentResponse.status} ${studentResponse.statusText}`);
+        // Mostrar el mensaje del servidor (p. ej. qué apoderado falló y por qué; no se guardó nada).
+        let mensaje = '';
+        try { mensaje = JSON.parse(errorText).message || ''; } catch { /* respuesta no JSON */ }
+        throw new Error(mensaje || `Error al guardar datos del estudiante: ${studentResponse.status} ${studentResponse.statusText}`);
       }
 
       console.log('✅ Estudiante guardado correctamente');
@@ -387,7 +390,9 @@ const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onClose, st
           if (!guardianResponse.ok) {
             const errorText = await guardianResponse.text();
             console.error('❌ Error en respuesta del apoderado:', errorText);
-            throw new Error(`Error al guardar datos del apoderado: ${guardianResponse.status} ${guardianResponse.statusText}`);
+            let mensaje = '';
+            try { const b = JSON.parse(errorText); mensaje = b.message || b.error || ''; } catch { /* respuesta no JSON */ }
+            throw new Error(mensaje || `Error al guardar datos del apoderado: ${guardianResponse.status} ${guardianResponse.statusText}`);
           }
 
           console.log('✅ Apoderado guardado correctamente');

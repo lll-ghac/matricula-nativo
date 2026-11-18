@@ -67,14 +67,41 @@ function normalizarNees(nees) {
   return [...new Set(ids)];
 }
 
-// Reemplaza las NEE del alumno en una sola transacción (si falla, no se pierde ninguna).
-async function sincronizarNees(alumnoId, neeIds) {
-  await prisma.$transaction([
-    prisma.alumno_nee.deleteMany({ where: { alumno_id: BigInt(alumnoId) } }),
-    ...(neeIds.length > 0
-      ? [prisma.alumno_nee.createMany({ data: neeIds.map(nee_id => ({ alumno_id: BigInt(alumnoId), nee_id })), skipDuplicates: true })]
-      : [])
-  ]);
+// Reemplaza las NEE del alumno. Con `db` = cliente de una transacción en curso, corre dentro de
+// ella; sin `db`, abre su propia transacción. En ambos casos: si falla, no se pierde ninguna.
+async function sincronizarNees(alumnoId, neeIds, db = null) {
+  const pasos = async (c) => {
+    await c.alumno_nee.deleteMany({ where: { alumno_id: BigInt(alumnoId) } });
+    if (neeIds.length > 0) {
+      await c.alumno_nee.createMany({ data: neeIds.map(nee_id => ({ alumno_id: BigInt(alumnoId), nee_id })), skipDuplicates: true });
+    }
+  };
+  if (db) return pasos(db);
+  return prisma.$transaction(tx => pasos(tx));
+}
+
+// Error de datos de un apoderado: se responde 400 con un mensaje entendible y se deshace todo.
+class ErrorApoderado extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ErrorApoderado';
+    this.status = 400;
+  }
+}
+
+const RESTRICCIONES_LEGIBLES = {
+  apoderados_genero_check: 'género no válido (debe ser Masculino, Femenino u Otro)',
+  apoderados_tipo_documento_check: 'tipo de documento no válido (RUT, DNI o Pasaporte)',
+  alumno_apoderado_tipo_relacion_check: 'tipo de relación no válido (titular o suplente)',
+};
+
+function describirErrorBD(e) {
+  const texto = String(e?.message || '');
+  const restriccion = texto.match(/check constraint "([^"]+)"/);
+  if (restriccion) return RESTRICCIONES_LEGIBLES[restriccion[1]] || `dato no válido (${restriccion[1]})`;
+  if (/Invalid value for argument `(\w+)`/.test(texto)) return `valor no válido en ${texto.match(/argument `(\w+)`/)[1]}`;
+  if (/Argument `(\w+)` is missing/.test(texto)) return `falta el dato ${texto.match(/Argument `(\w+)`/)[1]}`;
+  return getErrorMessage(e);
 }
 
 // Get all apoderados for a student with relation data, ordered by orden
@@ -95,7 +122,7 @@ async function getApoderadosDeAlumno(alumnoId) {
 }
 
 // Upsert a single apoderado; returns its BigInt id or null
-async function upsertApoderado(apoderado) {
+async function upsertApoderado(apoderado, db = prisma) {
   const searchValue = apoderado.rut || apoderado.dni || apoderado.pasaporte;
   if (!searchValue || String(searchValue).trim() === '') return null;
 
@@ -103,13 +130,13 @@ async function upsertApoderado(apoderado) {
   const whereRut = isNaN(rutInt) ? {} : { rut: rutInt };
 
   const existing = Object.keys(whereRut).length > 0
-    ? await prisma.apoderados.findFirst({ where: whereRut, select: { id: true } })
+    ? await db.apoderados.findFirst({ where: whereRut, select: { id: true } })
     : null;
 
   if (existing) {
     const normalized = normalizeApoderadoData({ ...apoderado });
     const data = prepareApoderadoForPrisma(normalized);
-    await prisma.apoderados.update({ where: { id: existing.id }, data });
+    await db.apoderados.update({ where: { id: existing.id }, data });
     return existing.id;
   }
 
@@ -119,28 +146,33 @@ async function upsertApoderado(apoderado) {
     ...apoderado
   });
   const data = prepareApoderadoForPrisma(normalized);
-  const created = await prisma.apoderados.create({ data });
+  const created = await db.apoderados.create({ data });
   return created.id;
 }
 
 // Delete all alumno-apoderado relations then recreate from array
-async function processApoderadosForAlumno(alumnoId, allApoderados) {
-  await prisma.alumno_apoderado.deleteMany({ where: { alumno_id: BigInt(alumnoId) } });
+// Reemplaza los vínculos alumno–apoderado. DEBE llamarse con el cliente de una transacción (`db`):
+// borra y recrea los vínculos; si un apoderado falla se lanza ErrorApoderado y la transacción
+// deshace todo (antes el error se registraba en el log y el alumno quedaba sin ese apoderado).
+async function processApoderadosForAlumno(alumnoId, allApoderados, db) {
+  if (!db) throw new Error('processApoderadosForAlumno requiere una transacción');
+  await db.alumno_apoderado.deleteMany({ where: { alumno_id: BigInt(alumnoId) } });
 
   for (const apoderado of allApoderados) {
     const searchValue = apoderado.rut || apoderado.dni || apoderado.pasaporte;
     if (!searchValue || String(searchValue).trim() === '') {
-      console.warn('[Students] Apoderado sin documento válido, saltando...');
-      continue;
+      continue; // casilla vacía (p. ej. suplente no ingresado)
     }
+    const etiqueta = apoderado.es_principal ? 'titular' : 'suplente';
+    const nombre = [apoderado.nombre, apoderado.apellido_paterno].filter(Boolean).join(' ');
     try {
-      const apoderadoId = await upsertApoderado(apoderado);
+      const apoderadoId = await upsertApoderado(apoderado, db);
       if (!apoderadoId) continue;
 
       const tipoRelacion = apoderado.es_principal ? 'titular' : 'suplente';
       const orden = apoderado.orden ?? (apoderado.es_principal ? 1 : 2);
 
-      await prisma.alumno_apoderado.create({
+      await db.alumno_apoderado.create({
         data: {
           alumno_id: BigInt(alumnoId),
           apoderado_id: apoderadoId,
@@ -150,7 +182,8 @@ async function processApoderadosForAlumno(alumnoId, allApoderados) {
         }
       });
     } catch (e) {
-      console.error('[Students] Error procesando apoderado:', e.message);
+      console.error(`[Students] Error procesando apoderado ${etiqueta}:`, e.message);
+      throw new ErrorApoderado(`No se pudo guardar el apoderado ${etiqueta}${nombre ? ` (${nombre})` : ''}: ${describirErrorBD(e)}. No se guardó ningún cambio.`);
     }
   }
 }
@@ -330,19 +363,20 @@ async function createStudent(req, res) {
     // eslint-disable-next-line no-unused-vars
     const { creado_por: _creadoPorOriginal, ...alumnoDataUpdate } = alumnoData;
 
-    const nuevoAlumno = await prisma.alumnos.upsert({
-      where: { rut_anio_matricula: { rut: alumnoData.rut, anio_matricula: alumnoData.anio_matricula } },
-      create: alumnoData,
-      update: { ...alumnoDataUpdate, motivo_eliminacion: null }
-    });
+    // Todo o nada: alumno + apoderados + NEE en una sola transacción.
+    const nuevoAlumno = await prisma.$transaction(async (tx) => {
+      const alumno = await tx.alumnos.upsert({
+        where: { rut_anio_matricula: { rut: alumnoData.rut, anio_matricula: alumnoData.anio_matricula } },
+        create: alumnoData,
+        update: { ...alumnoDataUpdate, motivo_eliminacion: null }
+      });
+      await processApoderadosForAlumno(alumno.id, allApoderados, tx);
+      await sincronizarNees(alumno.id, neeIdsNuevas, tx);
+      return alumno;
+    }, { timeout: 20000 });
 
     const studentId = nuevoAlumno.id;
     console.log(`[Students] Alumno procesado (upsert) con ID: ${studentId}`);
-
-    await processApoderadosForAlumno(studentId, allApoderados);
-
-    // Sync NEEs (validadas al inicio; transacción: si falla no se pierde ninguna)
-    await sincronizarNees(studentId, neeIdsNuevas);
 
     // Build response
     const studentComplete = await prisma.alumnos.findUnique({
@@ -374,6 +408,9 @@ async function createStudent(req, res) {
     res.status(201).json({ message: 'Matrícula guardada exitosamente.', studentId, data: responseData });
 
   } catch (outerError) {
+    if (outerError instanceof ErrorApoderado) {
+      return res.status(400).json({ message: outerError.message });
+    }
     console.error('[Students] Error en POST /api/students:', outerError);
     res.status(500).json({ message: 'Error de servidor durante la matrícula.', error: outerError.message });
   }
@@ -436,6 +473,14 @@ async function updateStudent(req, res) {
     const studentData = req.body;
     const { nees, apoderados: allApoderados, ...restStudentData } = studentData;
     const shouldUpdateGuardians = allApoderados !== undefined;
+    if (shouldUpdateGuardians) {
+      const conDocumento = Array.isArray(allApoderados)
+        ? allApoderados.filter(a => String(a?.rut || a?.dni || a?.pasaporte || '').trim() !== '')
+        : [];
+      if (!conDocumento.some(a => a.es_principal)) {
+        return res.status(400).json({ message: 'Debe haber un apoderado titular con documento. No se guardó ningún cambio.' });
+      }
+    }
     // NEE: solo se tocan si vienen en la petición; se validan ANTES de escribir nada.
     const neeIdsActualizar = nees === undefined || nees === null ? undefined : normalizarNees(nees);
     if (neeIdsActualizar === null) {
@@ -516,18 +561,25 @@ async function updateStudent(req, res) {
       delete alumnoData.carta_imagen_archivada;
     }
 
-    const result = await prisma.alumnos.updateMany({
-      where: { id: BigInt(id) },
-      data: alumnoData
-    });
+    // Todo o nada: alumno + NEE + apoderados en una sola transacción.
+    const result = await prisma.$transaction(async (tx) => {
+      const r = await tx.alumnos.updateMany({
+        where: { id: BigInt(id) },
+        data: alumnoData
+      });
+      if (r.count === 0) return r;
+      // NEE: solo si vinieron en la petición.
+      if (neeIdsActualizar !== undefined) {
+        await sincronizarNees(id, neeIdsActualizar, tx);
+      }
+      if (shouldUpdateGuardians) {
+        await processApoderadosForAlumno(id, allApoderados, tx);
+      }
+      return r;
+    }, { timeout: 20000 });
 
     if (result.count === 0) {
       return res.status(200).json({ message: 'Datos del estudiante actualizados exitosamente (sin cambios en la base de datos).' });
-    }
-
-    // NEE: solo si vinieron en la petición (antes se borraban siempre, aunque no se enviaran).
-    if (neeIdsActualizar !== undefined) {
-      await sincronizarNees(id, neeIdsActualizar);
     }
 
     // If no apoderados sent, return current state
@@ -556,9 +608,6 @@ async function updateStudent(req, res) {
       });
     }
 
-    await processApoderadosForAlumno(id, allApoderados);
-
-
     const studentComplete = await prisma.alumnos.findFirst({
       where: { id: BigInt(id) },
       include: { previsiones_salud: { select: { nombre: true } } }
@@ -584,6 +633,9 @@ async function updateStudent(req, res) {
     });
 
   } catch (error) {
+    if (error instanceof ErrorApoderado) {
+      return res.status(400).json({ message: error.message });
+    }
     console.error('[Students] Error en PUT /api/students/:id:', error);
     res.status(500).json({ message: 'Error de servidor al actualizar matrícula.', error: error.message });
   }
@@ -632,12 +684,19 @@ async function updateStudentGuardians(req, res) {
       return res.status(400).json({ message: 'Datos de apoderados inválidos.' });
     }
 
-    await processApoderadosForAlumno(id, allApoderados);
+    if (!allApoderados.some(a => a?.es_principal && String(a?.rut || a?.dni || a?.pasaporte || '').trim() !== '')) {
+      return res.status(400).json({ message: 'Debe haber un apoderado titular con documento. No se guardó ningún cambio.' });
+    }
+
+    await prisma.$transaction(tx => processApoderadosForAlumno(id, allApoderados, tx), { timeout: 20000 });
 
     console.log(`[Students] PUT /api/students/${id}/guardians completado`);
     res.status(200).json({ message: 'Apoderados actualizados exitosamente.' });
 
   } catch (error) {
+    if (error instanceof ErrorApoderado) {
+      return res.status(400).json({ message: error.message });
+    }
     console.error('[Students] Error en PUT /api/students/:id/guardians:', error);
     res.status(500).json({ message: 'Error de servidor al actualizar apoderados.', error: error.message });
   }
