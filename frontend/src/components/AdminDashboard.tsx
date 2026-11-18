@@ -12,7 +12,8 @@ import {
   UserPlus,
   BookOpen,
   Shield,
-  ArrowLeft
+  ArrowLeft,
+  Camera
 } from 'lucide-react';
 import YearManagement from './YearManagement';
 import StudentList from './StudentList';
@@ -26,6 +27,7 @@ import TrashManagement from './TrashManagement';
 import RutValidator from './RutValidator';
 import StudentForm from './StudentForm';
 import DatabaseMonitor from './DatabaseMonitor';
+import AutorizacionesImagenStats from './AutorizacionesImagenStats';
 
 type AdminSection =
   | 'overview'
@@ -39,7 +41,8 @@ type AdminSection =
   | 'trash'
   | 'backups'
   | 'rut-validator'
-  | 'database-monitor';
+  | 'database-monitor'
+  | 'image-authorizations';
 
 const AdminDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
@@ -201,6 +204,12 @@ const AdminDashboard: React.FC = () => {
       label: 'Monitor de BD',
       icon: Database,
       description: 'Monitoreo en tiempo real de la base de datos'
+    },
+    {
+      id: 'image-authorizations' as AdminSection,
+      label: 'Autorizaciones de Imagen',
+      icon: Camera,
+      description: 'Estadística de uso de fotografías y videos por curso'
     }
   ];
 
@@ -252,6 +261,8 @@ const AdminDashboard: React.FC = () => {
         return <RutValidator />;
       case 'database-monitor':
         return <DatabaseMonitor />;
+      case 'image-authorizations':
+        return <AutorizacionesImagenStats />;
       default:
         return <OverviewSection menuItems={menuItems} onSectionChange={setActiveSection} />;
     }

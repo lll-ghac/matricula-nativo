@@ -278,6 +278,7 @@ app.get('/api/year/current', years.getCurrentYear);
 // Statistics
 app.get('/api/statistics/general', authenticateToken, authorizeRole(['administrador', 'inspector']), statistics.getGeneralStatistics);
 app.get('/api/statistics/courses', authenticateToken, authorizeRole(['administrador', 'inspector']), statistics.getCourseStatistics);
+app.get('/api/statistics/autorizaciones-imagen', authenticateToken, authorizeRole(['administrador', 'inspector']), statistics.getImageAuthorizationStatistics);
 
 // Admin & System
 app.get('/api/health', admin.healthCheck);
